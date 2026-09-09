@@ -592,7 +592,11 @@ class NoveltyAssessment(Model):
 class BenchmarkParams(Model):
     level: int = Field(default=4, ge=1, le=8)
     locus_count: int = Field(default=50, ge=10, le=500)
-    causal_interactions: int = Field(default=2, ge=1, le=10)
+    # Level 1 and other null/additive benchmark configurations legitimately
+    # contain zero planted interaction terms. The benchmark engine derives
+    # the effective truth from ``level``; rejecting zero here made the public
+    # level catalogue impossible to serialize.
+    causal_interactions: int = Field(default=2, ge=0, le=10)
     recombination_rate: float = Field(default=0.08, ge=0.0, le=0.5)
     effect_size: float = Field(default=24.0, ge=0.1)
     noise: float = Field(default=0.0, ge=0.0, le=100.0)
