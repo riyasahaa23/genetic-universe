@@ -1,0 +1,2 @@
+# Native HTSlib adapter for indexed VCF/BCF. Install under Linux, WSL, or Docker.
+cyvcf2>=0.31,<0.32

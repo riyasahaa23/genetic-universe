@@ -1,0 +1,11 @@
+{
+  "dataset_id": "fixture_epistasis_ab_cd_v1",
+  "mode": "synthetic",
+  "assembly": "synthetic",
+  "seed": 42,
+  "model_id": "synthetic_height_like",
+  "model_version": "1.0.0",
+  "disclosure": "All genotype and phenotype values are synthetic.",
+  "expected_top_candidate": "E_L10_L31",
+  "expected_intervention": "break_interaction"
+}

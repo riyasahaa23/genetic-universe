@@ -1,0 +1,2864 @@
+{
+  "components": {
+    "schemas": {
+      "BreakpointConfidence": {
+        "enum": [
+          "exact",
+          "inferred_interval"
+        ],
+        "title": "BreakpointConfidence",
+        "type": "string"
+      },
+      "CandidateKind": {
+        "enum": [
+          "variant",
+          "segment",
+          "interaction"
+        ],
+        "title": "CandidateKind",
+        "type": "string"
+      },
+      "CounterfactualList": {
+        "additionalProperties": false,
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/CounterfactualResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "results"
+        ],
+        "title": "CounterfactualList",
+        "type": "object"
+      },
+      "CounterfactualRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "intervention": {
+            "$ref": "#/components/schemas/InterventionKind"
+          },
+          "parent_role": {
+            "default": "parent_a",
+            "enum": [
+              "parent_a",
+              "parent_b"
+            ],
+            "title": "Parent Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "intervention"
+        ],
+        "title": "CounterfactualRequest",
+        "type": "object"
+      },
+      "CounterfactualResult": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "changed_loci": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Changed Loci",
+            "type": "array"
+          },
+          "computational_only": {
+            "default": true,
+            "title": "Computational Only",
+            "type": "boolean"
+          },
+          "counterfactual": {
+            "$ref": "#/components/schemas/PhenotypeResult"
+          },
+          "delta": {
+            "title": "Delta",
+            "type": "number"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "intervention": {
+            "$ref": "#/components/schemas/InterventionKind"
+          },
+          "intervention_id": {
+            "title": "Intervention Id",
+            "type": "string"
+          },
+          "novelty_resolved": {
+            "title": "Novelty Resolved",
+            "type": "boolean"
+          },
+          "original": {
+            "$ref": "#/components/schemas/PhenotypeResult"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "intervention_id",
+          "run_id",
+          "candidate_id",
+          "intervention",
+          "original",
+          "counterfactual",
+          "delta",
+          "novelty_resolved",
+          "changed_loci",
+          "explanation"
+        ],
+        "title": "CounterfactualResult",
+        "type": "object"
+      },
+      "CreateRunRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "dataset_id": {
+            "default": "fixture_epistasis_ab_cd_v1",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/RunMode",
+            "default": "synthetic"
+          },
+          "options": {
+            "$ref": "#/components/schemas/RunOptions"
+          },
+          "phenotype_model_id": {
+            "default": "synthetic_height_like",
+            "title": "Phenotype Model Id",
+            "type": "string"
+          },
+          "seed": {
+            "default": 42,
+            "minimum": 0.0,
+            "title": "Seed",
+            "type": "integer"
+          }
+        },
+        "title": "CreateRunRequest",
+        "type": "object"
+      },
+      "CrossoverSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "breakpoint": {
+            "exclusiveMinimum": 0.0,
+            "title": "Breakpoint",
+            "type": "integer"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/BreakpointConfidence"
+          },
+          "crossover_id": {
+            "title": "Crossover Id",
+            "type": "string"
+          },
+          "evidence_status": {
+            "$ref": "#/components/schemas/EvidenceStatus"
+          },
+          "interval_end": {
+            "exclusiveMinimum": 0.0,
+            "title": "Interval End",
+            "type": "integer"
+          },
+          "interval_start": {
+            "minimum": 0.0,
+            "title": "Interval Start",
+            "type": "integer"
+          },
+          "left_haplotype": {
+            "title": "Left Haplotype",
+            "type": "string"
+          },
+          "parent_id": {
+            "title": "Parent Id",
+            "type": "string"
+          },
+          "right_haplotype": {
+            "title": "Right Haplotype",
+            "type": "string"
+          }
+        },
+        "required": [
+          "crossover_id",
+          "parent_id",
+          "breakpoint",
+          "interval_start",
+          "interval_end",
+          "left_haplotype",
+          "right_haplotype",
+          "confidence",
+          "evidence_status"
+        ],
+        "title": "CrossoverSnapshot",
+        "type": "object"
+      },
+      "DataDisclosure": {
+        "additionalProperties": false,
+        "properties": {
+          "causal_interpretation": {
+            "minLength": 1,
+            "title": "Causal Interpretation",
+            "type": "string"
+          },
+          "dataset_kind": {
+            "minLength": 1,
+            "title": "Dataset Kind",
+            "type": "string"
+          },
+          "genotype_source": {
+            "minLength": 1,
+            "title": "Genotype Source",
+            "type": "string"
+          },
+          "phenotype_source": {
+            "minLength": 1,
+            "title": "Phenotype Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_kind",
+          "genotype_source",
+          "phenotype_source",
+          "causal_interpretation"
+        ],
+        "title": "DataDisclosure",
+        "type": "object"
+      },
+      "DatasetListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "datasets": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetSummary"
+            },
+            "title": "Datasets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "datasets"
+        ],
+        "title": "DatasetListResponse",
+        "type": "object"
+      },
+      "DatasetSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "assembly": {
+            "title": "Assembly",
+            "type": "string"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "disclosure": {
+            "title": "Disclosure",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/RunMode"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "label",
+          "mode",
+          "assembly",
+          "disclosure",
+          "available"
+        ],
+        "title": "DatasetSummary",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "message": {
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "request_id"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "EvidenceGraph": {
+        "additionalProperties": false,
+        "properties": {
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceLink"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceNode"
+            },
+            "title": "Nodes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "nodes",
+          "links"
+        ],
+        "title": "EvidenceGraph",
+        "type": "object"
+      },
+      "EvidenceLink": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_status": {
+            "$ref": "#/components/schemas/EvidenceStatus"
+          },
+          "provenance": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Provenance",
+            "type": "array"
+          },
+          "relation": {
+            "title": "Relation",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "relation",
+          "evidence_status"
+        ],
+        "title": "EvidenceLink",
+        "type": "object"
+      },
+      "EvidenceNode": {
+        "additionalProperties": false,
+        "properties": {
+          "attributes": {
+            "additionalProperties": true,
+            "title": "Attributes",
+            "type": "object"
+          },
+          "evidence_status": {
+            "$ref": "#/components/schemas/EvidenceStatus"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "node_id": {
+            "title": "Node Id",
+            "type": "string"
+          },
+          "node_type": {
+            "title": "Node Type",
+            "type": "string"
+          },
+          "provenance": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Provenance",
+            "type": "array"
+          }
+        },
+        "required": [
+          "node_id",
+          "node_type",
+          "label",
+          "evidence_status"
+        ],
+        "title": "EvidenceNode",
+        "type": "object"
+      },
+      "EvidenceStatus": {
+        "enum": [
+          "observed",
+          "inferred",
+          "hypothesis",
+          "unresolved"
+        ],
+        "title": "EvidenceStatus",
+        "type": "string"
+      },
+      "GameteSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "alleles": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Alleles",
+            "type": "array"
+          },
+          "crossovers": {
+            "items": {
+              "$ref": "#/components/schemas/CrossoverSnapshot"
+            },
+            "title": "Crossovers",
+            "type": "array"
+          },
+          "parent_id": {
+            "title": "Parent Id",
+            "type": "string"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentProvenance"
+            },
+            "title": "Segments",
+            "type": "array"
+          }
+        },
+        "required": [
+          "parent_id",
+          "alleles",
+          "crossovers",
+          "segments"
+        ],
+        "title": "GameteSnapshot",
+        "type": "object"
+      },
+      "GenomeSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "gamete_a": {
+            "$ref": "#/components/schemas/GameteSnapshot"
+          },
+          "gamete_b": {
+            "$ref": "#/components/schemas/GameteSnapshot"
+          },
+          "loci": {
+            "items": {
+              "$ref": "#/components/schemas/LocusSnapshot"
+            },
+            "title": "Loci",
+            "type": "array"
+          },
+          "offspring": {
+            "$ref": "#/components/schemas/OffspringSnapshot"
+          },
+          "parent_a": {
+            "$ref": "#/components/schemas/ParentGenomeSnapshot"
+          },
+          "parent_b": {
+            "$ref": "#/components/schemas/ParentGenomeSnapshot"
+          }
+        },
+        "required": [
+          "loci",
+          "parent_a",
+          "parent_b",
+          "gamete_a",
+          "gamete_b",
+          "offspring"
+        ],
+        "title": "GenomeSnapshot",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "database": {
+            "title": "Database",
+            "type": "string"
+          },
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "scientific_core": {
+            "title": "Scientific Core",
+            "type": "string"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "version",
+          "environment",
+          "mode",
+          "database",
+          "scientific_core",
+          "timestamp"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "IngestionPreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "chromosome": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chromosome"
+          },
+          "dataset_id": {
+            "minLength": 1,
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "family_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Id"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          }
+        },
+        "required": [
+          "dataset_id"
+        ],
+        "title": "IngestionPreviewRequest",
+        "type": "object"
+      },
+      "IngestionPreviewResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Artifact Count",
+            "type": "integer"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "disclosure": {
+            "title": "Disclosure",
+            "type": "string"
+          },
+          "family_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Id"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "reference_build": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Build"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "sample_ids": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Sample Ids",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "available",
+          "status",
+          "disclosure"
+        ],
+        "title": "IngestionPreviewResponse",
+        "type": "object"
+      },
+      "InterventionKind": {
+        "enum": [
+          "revert_variant",
+          "swap_segment",
+          "break_interaction"
+        ],
+        "title": "InterventionKind",
+        "type": "string"
+      },
+      "LocusProvenanceSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "allele_a": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Allele A",
+            "type": "integer"
+          },
+          "allele_b": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Allele B",
+            "type": "integer"
+          },
+          "crossover_interval_a": {
+            "title": "Crossover Interval A",
+            "type": "string"
+          },
+          "crossover_interval_b": {
+            "title": "Crossover Interval B",
+            "type": "string"
+          },
+          "genotype_dosage": {
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Genotype Dosage",
+            "type": "integer"
+          },
+          "locus_id": {
+            "title": "Locus Id",
+            "type": "string"
+          },
+          "position": {
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "source_homolog_a": {
+            "title": "Source Homolog A",
+            "type": "string"
+          },
+          "source_homolog_b": {
+            "title": "Source Homolog B",
+            "type": "string"
+          },
+          "source_parent_a": {
+            "title": "Source Parent A",
+            "type": "string"
+          },
+          "source_parent_b": {
+            "title": "Source Parent B",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locus_id",
+          "position",
+          "allele_a",
+          "source_parent_a",
+          "source_homolog_a",
+          "crossover_interval_a",
+          "allele_b",
+          "source_parent_b",
+          "source_homolog_b",
+          "crossover_interval_b",
+          "genotype_dosage"
+        ],
+        "title": "LocusProvenanceSnapshot",
+        "type": "object"
+      },
+      "LocusSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "allele_values": {
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 2,
+            "title": "Allele Values",
+            "type": "array"
+          },
+          "chromosome": {
+            "title": "Chromosome",
+            "type": "string"
+          },
+          "locus_id": {
+            "title": "Locus Id",
+            "type": "string"
+          },
+          "position": {
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "source_variant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Variant Id"
+          }
+        },
+        "required": [
+          "locus_id",
+          "chromosome",
+          "position",
+          "allele_values"
+        ],
+        "title": "LocusSnapshot",
+        "type": "object"
+      },
+      "NoveltyResult": {
+        "additionalProperties": false,
+        "properties": {
+          "direction": {
+            "enum": [
+              "above_range",
+              "below_range",
+              "within_range"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "lower": {
+            "title": "Lower",
+            "type": "number"
+          },
+          "margin": {
+            "title": "Margin",
+            "type": "number"
+          },
+          "offspring_value": {
+            "title": "Offspring Value",
+            "type": "number"
+          },
+          "outside_parental_range": {
+            "title": "Outside Parental Range",
+            "type": "boolean"
+          },
+          "upper": {
+            "title": "Upper",
+            "type": "number"
+          }
+        },
+        "required": [
+          "outside_parental_range",
+          "lower",
+          "upper",
+          "offspring_value",
+          "margin",
+          "direction"
+        ],
+        "title": "NoveltyResult",
+        "type": "object"
+      },
+      "OffspringSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "dosage": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Dosage",
+            "type": "array"
+          },
+          "locus_provenance": {
+            "items": {
+              "$ref": "#/components/schemas/LocusProvenanceSnapshot"
+            },
+            "title": "Locus Provenance",
+            "type": "array"
+          },
+          "maternal_gamete": {
+            "$ref": "#/components/schemas/GameteSnapshot"
+          },
+          "offspring_id": {
+            "title": "Offspring Id",
+            "type": "string"
+          },
+          "paternal_gamete": {
+            "$ref": "#/components/schemas/GameteSnapshot"
+          }
+        },
+        "required": [
+          "offspring_id",
+          "maternal_gamete",
+          "paternal_gamete",
+          "dosage",
+          "locus_provenance"
+        ],
+        "title": "OffspringSnapshot",
+        "type": "object"
+      },
+      "ParentGenomeSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "dosage": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Dosage",
+            "type": "array"
+          },
+          "haplotypes": {
+            "additionalProperties": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "title": "Haplotypes",
+            "type": "object"
+          },
+          "loci": {
+            "items": {
+              "$ref": "#/components/schemas/LocusSnapshot"
+            },
+            "title": "Loci",
+            "type": "array"
+          },
+          "parent_id": {
+            "title": "Parent Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parent_id",
+          "haplotypes",
+          "dosage",
+          "loci"
+        ],
+        "title": "ParentGenomeSnapshot",
+        "type": "object"
+      },
+      "PhenotypeBundle": {
+        "additionalProperties": false,
+        "properties": {
+          "novelty": {
+            "$ref": "#/components/schemas/NoveltyResult"
+          },
+          "offspring": {
+            "$ref": "#/components/schemas/PhenotypeResult"
+          },
+          "parent_a": {
+            "$ref": "#/components/schemas/PhenotypeResult"
+          },
+          "parent_b": {
+            "$ref": "#/components/schemas/PhenotypeResult"
+          }
+        },
+        "required": [
+          "parent_a",
+          "parent_b",
+          "offspring",
+          "novelty"
+        ],
+        "title": "PhenotypeBundle",
+        "type": "object"
+      },
+      "PhenotypeContribution": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "loci": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Loci",
+            "type": "array"
+          },
+          "term_id": {
+            "title": "Term Id",
+            "type": "string"
+          },
+          "term_type": {
+            "title": "Term Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "term_id",
+          "term_type",
+          "loci",
+          "value",
+          "active"
+        ],
+        "title": "PhenotypeContribution",
+        "type": "object"
+      },
+      "PhenotypeResult": {
+        "additionalProperties": false,
+        "properties": {
+          "contributions": {
+            "items": {
+              "$ref": "#/components/schemas/PhenotypeContribution"
+            },
+            "title": "Contributions",
+            "type": "array"
+          },
+          "formula": {
+            "title": "Formula",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "subject_id": {
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "subject_id",
+          "value",
+          "contributions",
+          "model_id",
+          "model_version",
+          "formula"
+        ],
+        "title": "PhenotypeResult",
+        "type": "object"
+      },
+      "ProvenanceMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "code_revision": {
+            "minLength": 1,
+            "title": "Code Revision",
+            "type": "string"
+          },
+          "dataset_id": {
+            "minLength": 1,
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "disclosure": {
+            "minLength": 1,
+            "title": "Disclosure",
+            "type": "string"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "model_id": {
+            "minLength": 1,
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_version": {
+            "minLength": 1,
+            "title": "Model Version",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seed",
+          "dataset_id",
+          "model_id",
+          "model_version",
+          "code_revision",
+          "generated_at",
+          "disclosure"
+        ],
+        "title": "ProvenanceMetadata",
+        "type": "object"
+      },
+      "RunCreateResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "events_url": {
+            "title": "Events Url",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "snapshot_url": {
+            "title": "Snapshot Url",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "events_url",
+          "snapshot_url"
+        ],
+        "title": "RunCreateResponse",
+        "type": "object"
+      },
+      "RunEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "emitted_at": {
+            "format": "date-time",
+            "title": "Emitted At",
+            "type": "string"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "sequence": {
+            "minimum": 1.0,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/RunStage"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_id",
+          "run_id",
+          "sequence",
+          "type",
+          "stage",
+          "emitted_at"
+        ],
+        "title": "RunEvent",
+        "type": "object"
+      },
+      "RunMode": {
+        "enum": [
+          "synthetic",
+          "real_trio_synthetic_phenotype"
+        ],
+        "title": "RunMode",
+        "type": "string"
+      },
+      "RunOptions": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_interactions": {
+            "default": 2,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Candidate Interactions",
+            "type": "integer"
+          },
+          "family_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Id"
+          },
+          "include_noise": {
+            "default": false,
+            "title": "Include Noise",
+            "type": "boolean"
+          },
+          "locus_count": {
+            "default": 50,
+            "maximum": 1000.0,
+            "minimum": 20.0,
+            "title": "Locus Count",
+            "type": "integer"
+          },
+          "max_candidates": {
+            "default": 50,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Max Candidates",
+            "type": "integer"
+          },
+          "region_chromosome": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Chromosome"
+          },
+          "region_end": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region End"
+          },
+          "region_start": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Start"
+          }
+        },
+        "title": "RunOptions",
+        "type": "object"
+      },
+      "RunSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/TraceCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "counterfactuals": {
+            "items": {
+              "$ref": "#/components/schemas/CounterfactualResult"
+            },
+            "title": "Counterfactuals",
+            "type": "array"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "disclosure": {
+            "$ref": "#/components/schemas/DataDisclosure"
+          },
+          "evidence_graph": {
+            "$ref": "#/components/schemas/EvidenceGraph"
+          },
+          "genome": {
+            "$ref": "#/components/schemas/GenomeSnapshot"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/RunMode"
+          },
+          "phenotype": {
+            "$ref": "#/components/schemas/PhenotypeBundle"
+          },
+          "reproducibility": {
+            "$ref": "#/components/schemas/ProvenanceMetadata"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "source_artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/SourceArtifactReference"
+            },
+            "title": "Source Artifacts",
+            "type": "array"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/RunStage"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "mode",
+          "seed",
+          "stage",
+          "dataset_id",
+          "genome",
+          "phenotype",
+          "candidates",
+          "evidence_graph",
+          "reproducibility",
+          "disclosure"
+        ],
+        "title": "RunSnapshot",
+        "type": "object"
+      },
+      "RunStage": {
+        "enum": [
+          "setup",
+          "parent_loading",
+          "meiosis",
+          "fertilization",
+          "phenotype",
+          "novelty_detection",
+          "candidate_mining",
+          "counterfactual",
+          "evidence_graph",
+          "complete"
+        ],
+        "title": "RunStage",
+        "type": "string"
+      },
+      "RunStatus": {
+        "enum": [
+          "created",
+          "queued",
+          "running",
+          "completed",
+          "failed",
+          "cancelled"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      },
+      "RunStatusResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/RunMode"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "progress": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Progress",
+            "type": "number"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/RunStage"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "mode",
+          "stage",
+          "progress",
+          "seed",
+          "dataset_id",
+          "model_version"
+        ],
+        "title": "RunStatusResponse",
+        "type": "object"
+      },
+      "SegmentProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "$ref": "#/components/schemas/BreakpointConfidence"
+          },
+          "crossover_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crossover Id"
+          },
+          "end_locus_index": {
+            "exclusiveMinimum": 0.0,
+            "title": "End Locus Index",
+            "type": "integer"
+          },
+          "evidence_status": {
+            "$ref": "#/components/schemas/EvidenceStatus",
+            "default": "inferred"
+          },
+          "segment_id": {
+            "title": "Segment Id",
+            "type": "string"
+          },
+          "source_haplotype_id": {
+            "title": "Source Haplotype Id",
+            "type": "string"
+          },
+          "source_parent": {
+            "title": "Source Parent",
+            "type": "string"
+          },
+          "start_locus_index": {
+            "minimum": 0.0,
+            "title": "Start Locus Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "segment_id",
+          "start_locus_index",
+          "end_locus_index",
+          "source_parent",
+          "source_haplotype_id",
+          "confidence"
+        ],
+        "title": "SegmentProvenance",
+        "type": "object"
+      },
+      "SourceArtifactReference": {
+        "additionalProperties": false,
+        "description": "A logical, checksum-addressed input used by a scientific run.\n\n`path` is intentionally omitted from the public contract. Local absolute\npaths are an implementation detail and must never leak to the browser.",
+        "properties": {
+          "artifact_id": {
+            "minLength": 1,
+            "title": "Artifact Id",
+            "type": "string"
+          },
+          "reference_build": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Build"
+          },
+          "role": {
+            "minLength": 1,
+            "title": "Role",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "source_url": {
+            "minLength": 1,
+            "title": "Source Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifact_id",
+          "sha256",
+          "source_url",
+          "role"
+        ],
+        "title": "SourceArtifactReference",
+        "type": "object"
+      },
+      "TimelineResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/RunEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "next_sequence": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Sequence"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "events"
+        ],
+        "title": "TimelineResponse",
+        "type": "object"
+      },
+      "TraceCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "attribution_score": {
+            "title": "Attribution Score",
+            "type": "number"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "crossover_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Crossover Ids",
+            "type": "array"
+          },
+          "evidence_status": {
+            "$ref": "#/components/schemas/EvidenceStatus"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CandidateKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "loci": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Loci",
+            "type": "array"
+          },
+          "novelty_resolved": {
+            "title": "Novelty Resolved",
+            "type": "boolean"
+          },
+          "phenotype_delta": {
+            "title": "Phenotype Delta",
+            "type": "number"
+          },
+          "provenance_score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Provenance Score",
+            "type": "number"
+          },
+          "rank": {
+            "minimum": 1.0,
+            "title": "Rank",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "source_haplotypes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Haplotypes",
+            "type": "array"
+          },
+          "source_parents": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Parents",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "kind",
+          "rank",
+          "label",
+          "provenance_score",
+          "phenotype_delta",
+          "attribution_score",
+          "novelty_resolved",
+          "reason",
+          "evidence_status"
+        ],
+        "title": "TraceCandidate",
+        "type": "object"
+      },
+      "TraceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/TraceCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "graph": {
+            "$ref": "#/components/schemas/EvidenceGraph"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "novelty_available": {
+            "title": "Novelty Available",
+            "type": "boolean"
+          },
+          "ranking_definition": {
+            "title": "Ranking Definition",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "novelty_available",
+          "ranking_definition",
+          "candidates",
+          "graph",
+          "limitations"
+        ],
+        "title": "TraceResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Explainable inheritance simulation with deterministic synthetic phenotype models. Results are computational evidence and are not clinical predictions.",
+    "title": "Genetic Universe API",
+    "version": "4.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/v1/datasets": {
+      "get": {
+        "operationId": "list_datasets_v1_datasets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "List Datasets",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/v1/ingestion/preview": {
+      "post": {
+        "operationId": "preview_v1_ingestion_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestionPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/v1/runs": {
+      "post": {
+        "operationId": "create_run_v1_runs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunCreateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Create Run",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/v1/runs/{run_id}": {
+      "get": {
+        "operationId": "get_run_v1_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Get Run",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/v1/runs/{run_id}/counterfactuals": {
+      "get": {
+        "operationId": "list_counterfactuals_v1_runs__run_id__counterfactuals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "List Counterfactuals",
+        "tags": [
+          "counterfactuals"
+        ]
+      },
+      "post": {
+        "operationId": "execute_counterfactual_v1_runs__run_id__counterfactuals_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CounterfactualRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Execute Counterfactual",
+        "tags": [
+          "counterfactuals"
+        ]
+      }
+    },
+    "/v1/runs/{run_id}/snapshot": {
+      "get": {
+        "operationId": "snapshot_v1_runs__run_id__snapshot_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunSnapshot"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Snapshot",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/v1/runs/{run_id}/start": {
+      "post": {
+        "operationId": "start_run_v1_runs__run_id__start_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Start Run",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/v1/runs/{run_id}/timeline": {
+      "get": {
+        "operationId": "timeline_v1_runs__run_id__timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after_sequence",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "After Sequence",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelineResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Timeline",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/v1/runs/{run_id}/trace": {
+      "get": {
+        "operationId": "get_trace_v1_runs__run_id__trace_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Get Trace",
+        "tags": [
+          "trace"
+        ]
+      },
+      "post": {
+        "operationId": "run_trace_v1_runs__run_id__trace_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Run Trace",
+        "tags": [
+          "trace"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      GENETIC_ENVIRONMENT: production
+      GENETIC_REPOSITORY_BACKEND: sqlalchemy
+      GENETIC_DATABASE_URL: postgresql+psycopg://genetic:genetic@postgres:5432/genetic
+      GENETIC_ALLOWED_ORIGINS: http://localhost:3000
+      GENETIC_DATA_ROOT: /app/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: genetic
+      POSTGRES_PASSWORD: genetic
+      POSTGRES_DB: genetic
+    ports:
+      - "5432:5432"
+    volumes:
+      - genetic-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U genetic -d genetic"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  genetic-postgres:
