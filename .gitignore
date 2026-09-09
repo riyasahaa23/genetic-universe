@@ -14,6 +14,8 @@ node_modules
 
 # Testing
 coverage
+.mypy_cache/
+.ruff_cache/
 
 # Turbo
 .turbo
@@ -36,3 +38,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Local review/build workspaces
+.tmp/
