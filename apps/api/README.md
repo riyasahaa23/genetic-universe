@@ -68,7 +68,11 @@ pytest tests/unit tests/contract tests/integration -q
 python scripts/check-openapi.py
 ```
 
-The copied `app/trio` and `app/validation` packages are migration references. New features belong under the canonical packages described in [`PLAN.md`](PLAN.md).
+The copied `app/trio` and `app/validation` packages are migration references.
+Their former public behavior is available through canonical compatibility
+adapters: `/api/experiments/*`, `/api/families/*`, `/api/benchmark/*`, and
+`/ws/experiments/{experiment_id}`. New features belong under the canonical
+packages described in [`PLAN.md`](PLAN.md); clients should migrate to `/v1`.
 
 ## Runtime modes
 

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from app.domain.identifiers import new_event_id
 from app.domain.run import RunRecord
 from app.repositories.interfaces import RunRepository
-from app.schemas.common import RunStage
+from app.schemas.common import RunStage, RunStatus
 from app.schemas.events import RunEvent
 
 
@@ -28,8 +28,13 @@ class EventBus:
             RunStage.EVIDENCE_GRAPH: 0.95,
             RunStage.COMPLETE: 1.0,
         }
-        record.stage = stage
-        record.progress = max(record.progress, progress_by_stage[stage])
+        # A completed run can still receive post-run evidence events (for
+        # example, a counterfactual requested after the snapshot is ready).
+        # Those events retain their scientific stage in the event envelope but
+        # must not regress the run's terminal status/stage in memory or SQL.
+        if record.status not in {RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED} or stage == RunStage.COMPLETE:
+            record.stage = stage
+            record.progress = max(record.progress, progress_by_stage[stage])
         sequence = len(record.events) + 1
         event = RunEvent(
             event_id=new_event_id(record.run_id, sequence),

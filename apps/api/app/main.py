@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,8 +25,33 @@ from app.repositories.sqlalchemy import SqlAlchemyRunRepository
 from app.settings import Settings, get_settings
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
-    active_settings = settings or get_settings()
+def create_app(
+    settings: Settings | Path | str | None = None,
+    *,
+    allow_validation: bool = False,
+    data_root: Path | str | None = None,
+) -> FastAPI:
+    """Create an isolated application instance.
+
+    Production callers should pass :class:`Settings` (or rely on the cached
+    environment settings).  Accepting a data-root path is a deliberately
+    narrow compatibility affordance for the extracted backend's fixture
+    tests, which historically called ``create_app(path, allow_validation=...)``.
+    Validation manifests are opt-in and are never enabled by environment
+    configuration or the module-level production ``app`` instance.
+    """
+
+    if settings is not None and data_root is not None:
+        raise TypeError("Pass either settings or data_root, not both")
+    if data_root is not None:
+        settings = data_root
+
+    if settings is None:
+        active_settings = get_settings()
+    elif isinstance(settings, Settings):
+        active_settings = settings
+    else:
+        active_settings = Settings(data_root=Path(settings))
     configure_logging(active_settings.log_level)
     logger = logging.getLogger("genetic_universe.api")
 
@@ -64,6 +90,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     else:
         repository = InMemoryRunRepository(max_events_per_run=active_settings.max_events_per_run)
     application.state.settings = active_settings
+    application.state.allow_validation = allow_validation
     application.state.logger = logger
     application.state.repository = repository
     application.state.database_engine = database_engine

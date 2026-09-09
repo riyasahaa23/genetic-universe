@@ -17,6 +17,7 @@ class HealthResponse(ContractModel):
     environment: str
     mode: str
     database: str
+    database_backend: str
     scientific_core: str
     timestamp: datetime
 
@@ -38,11 +39,18 @@ def health(request: Request) -> HealthResponse:
             database_status = "unavailable"
     return HealthResponse(
         status="ok" if database_status != "unavailable" else "degraded",
-        service=settings.app_name,
+        # Preserve the stable service identifier used by the extracted API;
+        # the human-readable product name remains the FastAPI title.
+        service="genetic-universe-api",
         version=settings.app_version,
         environment=settings.environment,
         mode="synthetic_and_real_trio_synthetic_phenotype",
         database=database_status,
+        database_backend=(
+            "memory"
+            if engine is None
+            else settings.database_url.split(":", 1)[0].removesuffix("+psycopg")
+        ),
         scientific_core="synthetic-attribution-v1",
         timestamp=datetime.now(timezone.utc),
     )

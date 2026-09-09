@@ -21,7 +21,10 @@ from .trace import EvidenceGraph, TraceCandidate
 
 
 class RunOptions(ContractModel):
-    locus_count: int = Field(default=50, ge=20, le=1000)
+    # Ten loci is the lower bound supported by the migrated legacy experiment
+    # API. The scientific demo still defaults to fifty and the frontend should
+    # prefer twenty or more for readable crossover visualizations.
+    locus_count: int = Field(default=50, ge=10, le=1000)
     max_candidates: int = Field(default=50, ge=1, le=500)
     include_noise: bool = False
     candidate_interactions: int = Field(default=2, ge=1, le=10)

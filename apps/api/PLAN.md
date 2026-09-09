@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the execution plan for the canonical FastAPI backend. It supersedes the temporary copied entrypoints while preserving them as migration references under `app/trio` and `app/validation` until the corresponding phase is complete.
+This is the execution plan for the canonical FastAPI backend. It supersedes the temporary copied entrypoints while preserving them as migration references under `app/trio` and `app/validation`. Their old HTTP/WebSocket surfaces are available through canonical adapters under `app/api/compat/`, so clients can migrate without a second runtime.
 
 The implementation target is the backend described in [`../../backend/PLAN.md`](../../backend/PLAN.md), the cross-stack rules in [`../../common/PLAN.md`](../../common/PLAN.md), and the system architecture in [`../../PLAN.md`](../../PLAN.md).
 
@@ -18,9 +18,9 @@ This repository is currently at an integrated MVP checkpoint:
 | P1 contracts/domain | Complete for the MVP boundary | Strict Pydantic contracts, domain invariants and checked-in OpenAPI exist. |
 | P2 synthetic scientific core | Complete for the demo model | Seeded meiosis, phenotype ledger, novelty, trace, graph and three intervention kinds are wired. |
 | P3 orchestration/events | Complete for single-process execution | `ScientificPipeline`, run service, ordered timeline and replayable WebSocket exist. |
-| P4 API/persistence | Complete for memory and SQLite/PostgreSQL-compatible SQLAlchemy mode | REST routes, stable errors, migrations and repository contract are covered by integration tests. |
+| P4 API/persistence | Complete for memory and SQLite/PostgreSQL-compatible SQLAlchemy mode | REST routes, stable errors, migrations, repository contract and legacy compatibility adapters are covered by integration tests. |
 | P5 real-data mode | Complete as a prepared-region adapter | Indexed 1000 Genomes preparation CLI, checksum validation and real-genotype/synthetic-phenotype disclosure are implemented; no large public download is committed. |
-| P6 evaluation | Partial/integrated smoke coverage | Evaluation modules and local benchmark entrypoints exist; a formal multi-seed report still needs to be generated and committed. |
+| P6 evaluation | Complete as an executable evaluation surface; report artifact pending | Typed benchmark endpoints cover fixed, baseline, multi-seed, scalability, ablation, negative-control and final-evidence workflows. A formal committed report is still a release artifact, not a missing route. |
 | P7 hardening/deployment | Partial | Lint, strict boundary typing, tests, OpenAPI checks, non-root Docker and CI are present; Docker execution is environment-dependent and not run in this workspace. |
 
 The remaining gaps are deliberately visible in the phase audits under
@@ -103,13 +103,18 @@ apps/api/
 │   │   ├── router.py                   # top-level router and versioning
 │   │   ├── dependencies.py             # repositories, services, request IDs
 │   │   ├── errors.py                   # stable public error mapping
-│   │   └── v1/
-│   │       ├── health.py
-│   │       ├── datasets.py
-│   │       ├── runs.py
-│   │       ├── trace.py
-│   │       ├── counterfactuals.py
-│   │       └── events.py               # WebSocket route
+│   │   ├── v1/
+│   │   │   ├── health.py
+│   │   │   ├── datasets.py
+│   │   │   ├── runs.py
+│   │   │   ├── trace.py
+│   │   │   ├── counterfactuals.py
+│   │   │   └── events.py               # WebSocket route
+│   │   └── compat/                     # legacy /api and /ws adapters
+│   │       ├── experiments.py
+│   │       ├── real_trio.py
+│   │       ├── benchmarks.py
+│   │       └── events.py
 │   ├── schemas/
 │   │   ├── common.py                   # IDs, enums, pagination, provenance
 │   │   ├── run.py                      # requests, status and snapshots

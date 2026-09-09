@@ -12,15 +12,21 @@
   server side.
 - Added explicit pipeline and adapter import seams, canonical migration wrappers
   and detailed setup/wording documentation.
+- Added canonical compatibility adapters for every extracted experiment,
+  real-trio, benchmark and legacy WebSocket route, with regression coverage for
+  the synthetic HTTP/event flows.
 - Added WebSocket replay and failure-mode integration tests.
 
 ## Verification
 
 Commands run in this workspace:
 
-- `cd apps/api && .../pytest -q` — **21 passed**, 2 dependency deprecation warnings.
+- `cd apps/api && .../pytest -q tests/unit tests/contract tests/integration tests/property` — **26 passed**, 2 dependency deprecation warnings (including 4 compatibility tests).
 - `cd apps/api && .../ruff check app scripts tests/unit tests/contract tests/integration tests/property` — **passed**.
-- `cd apps/api && .../mypy --config-file pyproject.toml` — **passed**, 36 canonical boundary source files.
+- `cd apps/api && .../mypy --config-file pyproject.toml` — **passed** for the
+  strict API/domain/repository/schema boundary. Legacy-derived scientific
+  modules are explicitly an incremental typing backlog in the mypy config and
+  are still covered by runtime/property tests.
 - `.../python apps/api/scripts/check-openapi.py` — **OpenAPI contract is current**.
 - Manual synthetic smoke — REST run, trace, all three interventions and
   WebSocket replay passed.
@@ -28,8 +34,9 @@ Commands run in this workspace:
   successful responses.
 - Docker build/Compose/PostgreSQL — **not run** because Docker is unavailable
   in this workspace.
-- Full legacy copied tests — **not counted**; they require absent GIAB files
-  and old entrypoints and remain migration references.
+- Full legacy copied tests — **not green in this workspace** because the
+  external `GIAB_AJ`/1000 Genomes fixtures are absent. The old entrypoints are
+  not used; their HTTP and WebSocket behavior is covered by canonical adapters.
 
 ## Plan comparison
 
@@ -61,9 +68,9 @@ Commands run in this workspace:
 6. Security: 7.8/10 — strict models, explicit CORS, safe errors, non-root image,
    checksum/path controls and limits are present; auth/rate limiting are out of
    scope for the hackathon.
-7. Testing Quality: 8.4/10 — 21 canonical tests cover contracts, HTTP,
-   WebSocket, SQL restart, real mode, failures and properties; real downloaded
-   data and Docker are unverified here.
+7. Testing Quality: 8.4/10 — 26 canonical tests, including 4 compatibility
+   tests, cover contracts, HTTP, WebSocket, SQL restart, real mode, failures
+   and properties; external downloaded data and Docker are unverified here.
 8. Documentation: 8.5/10 — setup, API boundary, real-data preparation,
    scientific wording, migration and phase audits are documented.
 9. Scalability: 7.2/10 — metadata persistence and bounded artifacts are sound;
