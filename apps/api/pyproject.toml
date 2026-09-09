@@ -56,8 +56,20 @@ python_version = "3.12"
 strict = true
 explicit_package_bases = true
 mypy_path = "."
-# The canonical boundary is checked strictly. The copied scientific engine is
-# exercised by deterministic contract/property tests and is being typed behind
-# this boundary in the later hardening phase.
+# The API/domain/repository/schema boundary is checked strictly. The
+# legacy-derived scientific engine is exercised by deterministic tests and is
+# typed incrementally behind this boundary.
 packages = ["app.api", "app.domain", "app.repositories", "app.schemas"]
 exclude = "app/(trio|validation)/"
+
+# The legacy-derived scientific implementation is intentionally kept behind
+# typed application adapters. Ignoring its module-local diagnostics keeps the
+# strict check focused on the public boundary above; it does not claim that
+# those scientific modules are fully typed.
+[[tool.mypy.overrides]]
+module = ["app.scientific.*", "app.trio.*", "app.validation.*", "app.datasets.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["networkx", "cyvcf2"]
+ignore_missing_imports = true

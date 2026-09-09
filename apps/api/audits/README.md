@@ -10,6 +10,6 @@ they do not award credit for code left in `app/trio`, `app/validation`, or the
 legacy root-level tests unless the canonical runtime imports and tests that
 behavior.
 
-The current endpoint is `phase-7.md`. A final audit should be refreshed after
+The current endpoint is `phase-8-legacy-compat.md`. A final audit should be refreshed after
 the frontend is connected, a clean environment runs CI, Docker is exercised,
 and a formal multi-seed benchmark report is checked in.
