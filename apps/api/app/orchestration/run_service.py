@@ -45,10 +45,26 @@ class RunService:
 
     def create(self, request: CreateRunRequest) -> RunCreateResponse:
         run_id = new_run_id()
+        self.create_record(request, run_id)
+        return RunCreateResponse(run_id=run_id, status=RunStatus.CREATED, events_url=f"/v1/runs/{run_id}/events", snapshot_url=f"/v1/runs/{run_id}/snapshot")
+
+    def create_record(self, request: CreateRunRequest, run_id: str) -> RunRecord:
+        """Create a run record with a caller-provided validated identifier.
+
+        The versioned API normally uses :meth:`create`, while the legacy
+        compatibility surface needs to preserve its ``exp_`` identifiers.
+        Both paths use the same repository and event contract; this method is
+        deliberately kept below the transport layer so compatibility routes do
+        not create a second persistence implementation.
+        """
+        try:
+            validate_public_id(run_id)
+        except ValueError as exc:
+            raise ServiceError("INVALID_RUN_ID", "The run identifier is invalid.", 422) from exc
         record = RunRecord(run_id=run_id, request=request)
         self.repository.create(record)
         self.event_bus.publish(record, "run_created", RunStage.SETUP, {"mode": request.mode.value, "dataset_id": request.dataset_id, "seed": request.seed})
-        return RunCreateResponse(run_id=run_id, status=record.status, events_url=f"/v1/runs/{run_id}/events", snapshot_url=f"/v1/runs/{run_id}/snapshot")
+        return record
 
     def get(self, run_id: str) -> RunRecord:
         try:
@@ -80,16 +96,21 @@ class RunService:
                     self.event_bus.publish(record, "crossover_detected", RunStage.MEIOSIS, {"parent": gamete.parent_id, "breakpoint": crossover})
                 for segment in gamete.segments:
                     self.event_bus.publish(record, "gamete_segment_created", RunStage.MEIOSIS, {"parent": gamete.parent_id, "start": segment.start, "end": segment.end, "source_haplotype": segment.source_homolog})
+            self.event_bus.publish(record, "stage_started", RunStage.FERTILIZATION, {})
             self.event_bus.publish(record, "fertilization_complete", RunStage.FERTILIZATION, {"offspring_id": execution.offspring.offspring_id})
             snapshot = build_snapshot(execution, run_id)
             record.snapshot = snapshot
             record.trace = trace_response(execution, run_id)
             phenotype = snapshot.phenotype
+            self.event_bus.publish(record, "stage_started", RunStage.PHENOTYPE, {})
             self.event_bus.publish(record, "phenotype_computed", RunStage.PHENOTYPE, {"parent_a": phenotype.parent_a.value, "parent_b": phenotype.parent_b.value, "offspring": phenotype.offspring.value})
+            self.event_bus.publish(record, "stage_started", RunStage.NOVELTY_DETECTION, {})
             self.event_bus.publish(record, "novelty_detected", RunStage.NOVELTY_DETECTION, phenotype.novelty.model_dump())
+            self.event_bus.publish(record, "stage_started", RunStage.CANDIDATE_MINING, {})
             self.event_bus.publish(record, "candidate_set_ready", RunStage.CANDIDATE_MINING, {"count": len(snapshot.candidates)})
             for candidate in snapshot.candidates[:10]:
                 self.event_bus.publish(record, "candidate_ranked", RunStage.CANDIDATE_MINING, {"candidate_id": candidate.candidate_id, "rank": candidate.rank, "delta": candidate.phenotype_delta})
+            self.event_bus.publish(record, "stage_started", RunStage.EVIDENCE_GRAPH, {})
             self.event_bus.publish(record, "evidence_graph_ready", RunStage.EVIDENCE_GRAPH, {"nodes": len(snapshot.evidence_graph.nodes), "links": len(snapshot.evidence_graph.links)})
             record.status = RunStatus.COMPLETED
             record.stage = RunStage.COMPLETE
@@ -153,6 +174,17 @@ class RunService:
         self.repository.save(record)
         return result
 
+    def execution(self, run_id: str) -> SyntheticExecution:
+        """Return the scientific execution for compatibility adapters.
+
+        The public v1 API exposes typed snapshots instead of engine objects.
+        A small compatibility layer still needs the legacy dataclass details
+        (for example phenotype breakdowns), so it obtains them through this
+        single audited rehydration path rather than importing a second engine.
+        """
+
+        return self._execution_for_completed_record(self.get(run_id))
+
     def _execution_for_completed_record(self, record: RunRecord) -> SyntheticExecution:
         """Rehydrate deterministic scientific state for durable completed runs."""
 
@@ -174,6 +206,10 @@ class RunService:
 
     def counterfactual(self, run_id: str, request: CounterfactualRequest) -> CounterfactualResult:
         record = self.get(run_id)
+        requested_intervention_id = intervention_id(run_id, request.candidate_id, request.intervention.value)
+        existing = record.counterfactuals.get(requested_intervention_id)
+        if existing is not None:
+            return existing
         execution = self._execution_for_completed_record(record)
         expected_kind = {
             InterventionKind.BREAK_INTERACTION: "INTERACTION",
@@ -192,19 +228,47 @@ class RunService:
             raise ServiceError("CANDIDATE_NOT_FOUND", "The requested candidate does not exist.", 404)
         if raw_candidate.candidate_type != expected_kind:
             raise ServiceError("INTERVENTION_KIND_MISMATCH", "The intervention does not match the candidate kind.", 422, details={"candidate_kind": raw_candidate.candidate_type})
+        self.event_bus.publish(
+            record,
+            "counterfactual_started",
+            RunStage.COUNTERFACTUAL,
+            {"candidate_id": request.candidate_id, "intervention": request.intervention.value},
+        )
         raw_result = execution.tracer.run_counterfactual(raw_candidate)
         result = counterfactual_response(execution, run_id, raw_result)
-        result.intervention_id = intervention_id(run_id, request.candidate_id, request.intervention.value)
+        result.intervention_id = requested_intervention_id
+        result = self.persist_counterfactual(run_id, result)
+        self.event_bus.publish(record, "counterfactual_completed", RunStage.COUNTERFACTUAL, {"candidate_id": result.candidate_id, "delta": result.delta, "novelty_resolved": result.novelty_resolved})
+        return result
+
+    def persist_counterfactual(self, run_id: str, result: CounterfactualResult) -> CounterfactualResult:
+        """Persist a computed result and mirror it into the run snapshot.
+
+        The canonical endpoint computes its result here, while compatibility
+        adapters may need to preserve a legacy intervention string or output
+        shape. Both callers still use the same repository transaction and
+        durable snapshot update.
+        """
+
+        record = self.get(run_id)
+        if result.run_id != run_id:
+            raise ServiceError("INVALID_COUNTERFACTUAL", "The counterfactual does not belong to this run.", 422)
         existing = record.counterfactuals.get(result.intervention_id)
         if existing is not None:
             return existing
         self.repository.save_counterfactual(run_id, result)
+        # Keep the process-local record in sync with durable repositories too.
+        # The memory repository mutates it as an implementation detail, but
+        # SQLAlchemy intentionally persists through its own method. Updating
+        # the aggregate here makes the snapshot identical after either
+        # backend and ensures the newly computed intervention is included in
+        # the persisted snapshot JSON.
+        record.counterfactuals[result.intervention_id] = result
         if record.snapshot is not None:
             record.snapshot = record.snapshot.model_copy(
                 update={"counterfactuals": list(record.counterfactuals.values())}
             )
             self.repository.save(record)
-        self.event_bus.publish(record, "counterfactual_completed", RunStage.COUNTERFACTUAL, {"candidate_id": result.candidate_id, "delta": result.delta, "novelty_resolved": result.novelty_resolved})
         return result
 
     def counterfactual_list(self, run_id: str) -> CounterfactualList:

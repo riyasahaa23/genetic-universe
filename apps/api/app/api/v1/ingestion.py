@@ -78,12 +78,17 @@ def preview(request: IngestionPreviewRequest, http_request: Request) -> Ingestio
             disclosure="Real mode requires prepared, checksum-addressed public trio artifacts.",
         )
     except Exception as exc:
+        # Keep the preview useful without reflecting manifest-controlled paths,
+        # parser internals, or arbitrary exception text to the client.
         issue = "Prepared input validation failed."
         if isinstance(exc, ValueError):
-            issue = str(exc)
-            # Do not return filesystem paths from checksum/path validation.
-            if "Missing input:" in issue:
+            detail = str(exc).lower()
+            if "missing input" in detail or "not found" in detail:
                 issue = "One or more prepared artifacts are missing."
+            elif "checksum" in detail:
+                issue = "One or more prepared artifact checksums do not match."
+            elif "outside" in detail or "region" in detail:
+                issue = "The requested region is outside the prepared data."
         return IngestionPreviewResponse(
             dataset_id=request.dataset_id,
             available=False,
