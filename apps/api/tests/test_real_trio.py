@@ -233,7 +233,11 @@ def test_api_and_errors(validation_data):
         assert client.post("/api/counterfactual", json=payload).json()["delta"] is None
         assert client.post("/api/counterfactual", json={**payload, "target_id": "absent"}).status_code == 404
         assert client.post("/api/counterfactual", json={**payload, "intervention": "BREAK_INTERACTION"}).status_code == 422
-        assert client.post("/api/experiments/demo/run").status_code == 404
+        # The canonical app serves the legacy experiment adapter and the
+        # real-trio adapter together. The extracted real-only app returned
+        # 404 here, but that assertion is intentionally obsolete after the
+        # single-runtime migration.
+        assert client.post("/api/experiments/demo/run").status_code == 200
         assert client.get("/openapi.json").json()["paths"]["/api/counterfactual"]["post"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"].endswith("CounterfactualResult")
 
 
