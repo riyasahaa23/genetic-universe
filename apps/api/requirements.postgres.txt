@@ -1,0 +1,2 @@
+# Optional durable PostgreSQL adapter for Docker Compose and deployment.
+psycopg[binary]==3.3.5

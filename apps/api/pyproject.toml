@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "genetic-universe-api"
+version = "4.0.0"
+description = "Explainable inheritance simulation and Novelty Trace API"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "fastapi==0.141.1",
+  "uvicorn[standard]==0.52.4",
+  "pydantic==2.13.5",
+  "pydantic-settings==2.15.0",
+  "networkx==3.6.1",
+  "numpy==2.5.3",
+  "sqlalchemy==2.0.52",
+]
+
+[project.optional-dependencies]
+genomics = ["cyvcf2>=0.31,<0.32"]
+test = [
+  "pytest==9.1.1",
+  "httpx==0.28.1",
+  "pytest-cov>=6,<8",
+  "hypothesis>=6,<7",
+]
+quality = [
+  "ruff>=0.11,<1",
+  "mypy>=1.15,<2",
+]
+postgres = ["psycopg[binary]>=3.2,<4"]
+
+[project.scripts]
+genetic-universe-api = "app.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests/unit", "tests/integration", "tests/contract", "tests/property"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = ["app/trio", "app/validation", "tests/validation"]
+
+[tool.ruff.lint]
+select = ["E4", "E9", "F", "I"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+explicit_package_bases = true
+mypy_path = "."
+# The canonical boundary is checked strictly. The copied scientific engine is
+# exercised by deterministic contract/property tests and is being typed behind
+# this boundary in the later hardening phase.
+packages = ["app.api", "app.domain", "app.repositories", "app.schemas"]
+exclude = "app/(trio|validation)/"
