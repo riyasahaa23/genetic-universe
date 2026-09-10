@@ -8,14 +8,6 @@ interface EvidenceGraphProps {
 }
 
 export const EvidenceGraphD3: React.FC<EvidenceGraphProps> = ({ data }) => {
-  if (!data || !data.nodes || data.nodes.length === 0) {
-    return (
-      <div className="p-4 rounded-xl bg-[#050e22]/50 border border-slate-800 text-center text-xs text-slate-500 italic">
-        Awaiting causal evidence graph synthesis...
-      </div>
-    );
-  }
-
   // Assign clean layout positions by node type tier
   const tieredNodes = useMemo(() => {
     const tierMap: Record<string, number> = {
@@ -31,11 +23,13 @@ export const EvidenceGraphD3: React.FC<EvidenceGraphProps> = ({ data }) => {
     const typeCounts: Record<string, number> = {};
     const typeIndices: Record<string, number> = {};
 
-    data.nodes.forEach((n) => {
+    const nodes = data?.nodes ?? [];
+
+    nodes.forEach((n) => {
       typeCounts[n.type] = (typeCounts[n.type] || 0) + 1;
     });
 
-    return data.nodes.map((node) => {
+    return nodes.map((node) => {
       const type = node.type || "other";
       const count = typeCounts[type] || 1;
       const idx = typeIndices[type] || 0;
@@ -66,6 +60,14 @@ export const EvidenceGraphD3: React.FC<EvidenceGraphProps> = ({ data }) => {
     tieredNodes.forEach((n) => map.set(n.id, { x: n.x, y: n.y }));
     return map;
   }, [tieredNodes]);
+
+  if (!data || !data.nodes || data.nodes.length === 0) {
+    return (
+      <div className="p-4 rounded-xl bg-[#050e22]/50 border border-slate-800 text-center text-xs text-slate-500 italic">
+        Awaiting causal evidence graph synthesis...
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-[#050e20]/80 rounded-xl border border-slate-800/80 p-3 select-none">

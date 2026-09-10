@@ -79,7 +79,7 @@ export const CounterfactualExplanation: React.FC<{ currentSceneIndex: number; re
           </mesh>
           <Html position={[0, -1.5, 0]} center distanceFactor={10} className="pointer-events-none select-none">
             <div className="px-3 py-1 rounded-xl bg-slate-900/90 border border-emerald-400 text-emerald-300 font-mono text-[10px] font-bold shadow-lg whitespace-nowrap">
-              In-Silico Evaluation: y(x') = Σ αᵢxᵢ' + Σ βⱼdⱼ' + Σ γᵤᵥxᵤ'xᵥ'
+              In-Silico Evaluation: y(x&apos;) = Σ αᵢxᵢ&apos; + Σ βⱼdⱼ&apos; + Σ γᵤᵥxᵤ&apos;xᵥ&apos;
             </div>
           </Html>
         </group>

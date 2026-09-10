@@ -211,7 +211,7 @@ export const InteractionNetworkPanel: React.FC = () => {
     return () => {
       simulation.stop();
     };
-  }, [activeWorkflowStep, selectedCandidate]);
+  }, [activeWorkflowStep, selectedCandidate, setHoveredLocus, setTooltip]);
 
   const title =
     activeWorkflowStep === 1

@@ -190,7 +190,7 @@ export const InteractionNetworkPanel: React.FC = () => {
     return () => {
       simulation.stop();
     };
-  }, [networkFilter]);
+  }, [networkFilter, setHoveredLocus, setSelectedPair, setTooltip]);
 
   const pair = selectedPair || defaultInteractionPair;
   const {

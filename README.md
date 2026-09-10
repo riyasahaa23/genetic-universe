@@ -102,6 +102,22 @@ npx turbo dev --filter=web
 pnpm exec turbo dev --filter=web
 ```
 
+### Docker
+
+Start PostgreSQL, the FastAPI backend, and the Next.js web app together:
+
+```sh
+docker compose up --build
+```
+
+The web app is available at `http://localhost:3000` and the API health check at
+`http://localhost:8000/health`. Copy `.env.example` to `.env` to customize
+ports, database credentials, or browser-facing API URLs. Stop the stack with:
+
+```sh
+docker compose down
+```
+
 ### Remote Caching
 
 > [!TIP]

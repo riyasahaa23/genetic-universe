@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { useCounterfactual } from "../interactions/CounterfactualInteractionContext";
 
 export const PhenotypeComparisonPanel: React.FC = () => {
@@ -45,13 +45,10 @@ export const PhenotypeComparisonPanel: React.FC = () => {
     }, "");
   };
 
-  const parentAPath = useMemo(() => generateGaussianPath(-1.3, 0.7, 4.8), []);
-  const parentBPath = useMemo(() => generateGaussianPath(0.1, 0.65, 5.8), []);
-  const originalPath = useMemo(() => generateGaussianPath(2.1, 0.6, 4.6), []);
-  const modifiedPath = useMemo(
-    () => generateGaussianPath(selectedCandidate.newPhenotype, 0.6, 5.2),
-    [selectedCandidate.newPhenotype]
-  );
+  const parentAPath = generateGaussianPath(-1.3, 0.7, 4.8);
+  const parentBPath = generateGaussianPath(0.1, 0.65, 5.8);
+  const originalPath = generateGaussianPath(2.1, 0.6, 4.6);
+  const modifiedPath = generateGaussianPath(selectedCandidate.newPhenotype, 0.6, 5.2);
 
   return (
     <div className="h-full bg-[#040817]/90 backdrop-blur-md border border-slate-800/80 rounded-2xl p-2.5 flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.5)] select-none">

@@ -135,9 +135,18 @@ GENETIC_DATABASE_URL=sqlite:///./genetic_universe.db \
 uvicorn app.main:app --port 8000
 ```
 
-For PostgreSQL, run `docker compose -f docker-compose.yml up --build` from this
-directory. The API stores bounded run metadata, snapshots, events and
-counterfactual results in SQL; large VCF/BCF/tree artifacts remain files.
+For the complete local stack (PostgreSQL, API, and web app), run this from the
+repository root:
+
+```bash
+docker compose up --build
+```
+
+The API is available at `http://localhost:8000`, the web app at
+`http://localhost:3000`, and PostgreSQL at `localhost:5432`. The API stores
+bounded run metadata, snapshots, events and counterfactual results in SQL;
+large VCF/BCF/tree artifacts remain files. Copy `.env.example` to `.env` to
+override the local Compose defaults.
 
 ## Scientific wording
 
