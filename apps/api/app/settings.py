@@ -32,6 +32,15 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     max_events_per_run: int = Field(default=2000, ge=100, le=100_000)
     max_snapshot_candidates: int = Field(default=100, ge=1, le=500)
+    # Expensive post-run analyses are synchronous in this research MVP. Keep
+    # their public ceilings explicit so a browser cannot turn an API worker
+    # into an unbounded simulation process. Operators can lower these values
+    # per environment through the GENETIC_ prefix.
+    max_null_simulations: int = Field(default=5000, ge=1, le=5000)
+    max_rescue_combination_count: int = Field(default=5000, ge=1, le=5000)
+    max_research_seeds: int = Field(default=50, ge=1, le=200)
+    max_research_bootstrap_replicates: int = Field(default=2000, ge=1, le=5000)
+    max_research_null_simulations: int = Field(default=1000, ge=1, le=5000)
 
     @property
     def cors_origins(self) -> list[str]:

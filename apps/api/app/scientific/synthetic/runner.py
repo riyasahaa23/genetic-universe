@@ -341,7 +341,23 @@ def _counterfactual_result(execution: SyntheticExecution, run_id: str, raw: RawC
     altered = raw.semantics.get("altered_state", {})
     h1 = altered.get("h1", execution.gamete_a.alleles) if isinstance(altered, dict) else execution.gamete_a.alleles
     h2 = altered.get("h2", execution.gamete_b.alleles) if isinstance(altered, dict) else execution.gamete_b.alleles
+    disabled_pairs: set[tuple[int, int]] = set()
+    if isinstance(altered, dict):
+        for pair in altered.get("disabled_pairs") or []:
+            if isinstance(pair, (list, tuple)) and len(pair) == 2:
+                try:
+                    disabled_pairs.add((int(pair[0]), int(pair[1])))
+                except (TypeError, ValueError):
+                    continue
     counterfactual = _phenotype_result("offspring_counterfactual", execution.phenotype_engine.evaluate_diploid(list(h1), list(h2)), execution.phenotype_config)
+    if disabled_pairs:
+        counterfactual = _phenotype_result(
+            "offspring_counterfactual",
+            execution.phenotype_engine.evaluate_diploid(
+                list(h1), list(h2), broken_pairs=disabled_pairs
+            ),
+            execution.phenotype_config,
+        )
     changed_loci = [str(value) for key in ("locus_id", "locus_a", "locus_b") if (value := target.get(key))]
     intervention = {
         "break_interaction": "break_interaction",
@@ -362,6 +378,22 @@ def _counterfactual_result(execution: SyntheticExecution, run_id: str, raw: RawC
         novelty_resolved=bool(raw.novelty_removed),
         changed_loci=changed_loci,
         explanation="Recomputed under the configured synthetic phenotype model; this is computational evidence, not biological proof.",
+        baseline_phenotype=(raw.baseline_phenotype if raw.interaction_contrast is not None else None),
+        phenotype_after_a=raw.phenotype_after_a,
+        phenotype_after_b=raw.phenotype_after_b,
+        phenotype_after_ab=raw.phenotype_after_ab,
+        delta_a=raw.delta_a,
+        delta_b=raw.delta_b,
+        delta_ab=raw.delta_ab,
+        interaction_contrast=raw.interaction_contrast,
+        epistatic_excess=raw.epistatic_excess,
+        interaction_edge_delta=raw.interaction_edge_delta,
+        novelty_removed_a=raw.novelty_removed_a,
+        novelty_removed_b=raw.novelty_removed_b,
+        novelty_removed_ab=raw.novelty_removed_ab,
+        parental_envelope=raw.parental_envelope,
+        synergy_direction=raw.synergy_direction,
+        provenance=raw.provenance,
     )
 
 

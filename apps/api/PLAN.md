@@ -20,7 +20,7 @@ This repository is currently at an integrated MVP checkpoint:
 | P3 orchestration/events | Complete for single-process execution | `ScientificPipeline`, run service, ordered timeline and replayable WebSocket exist. |
 | P4 API/persistence | Complete for memory and SQLite/PostgreSQL-compatible SQLAlchemy mode | REST routes, stable errors, migrations, repository contract and legacy compatibility adapters are covered by integration tests. |
 | P5 real-data mode | Complete as a prepared-region adapter | Indexed 1000 Genomes preparation CLI, checksum validation and real-genotype/synthetic-phenotype disclosure are implemented; no large public download is committed. |
-| P6 evaluation | Complete as an executable evaluation surface; report artifact pending | Typed benchmark endpoints cover fixed, baseline, multi-seed, scalability, ablation, negative-control and final-evidence workflows. A formal committed report is still a release artifact, not a missing route. |
+| P6 evaluation | Complete as an executable evaluation surface; report artifact pending | Typed benchmark endpoints cover fixed, baseline, multi-seed, scalability, ablation, negative-control, null-distribution, bounded-rescue and final-evidence workflows. A formal committed report is still a release artifact, not a missing route. |
 | P7 hardening/deployment | Partial | Lint, strict boundary typing, tests, OpenAPI checks, non-root Docker and CI are present; Docker execution is environment-dependent and not run in this workspace. |
 
 The remaining gaps are deliberately visible in the phase audits under
@@ -107,6 +107,7 @@ apps/api/
 │   │   │   ├── health.py
 │   │   │   ├── datasets.py
 │   │   │   ├── runs.py
+│   │   │   ├── analyses.py
 │   │   │   ├── trace.py
 │   │   │   ├── counterfactuals.py
 │   │   │   └── events.py               # WebSocket route
@@ -122,6 +123,9 @@ apps/api/
 │   │   ├── phenotype.py                # model and contribution contracts
 │   │   ├── trace.py                    # candidate and graph contracts
 │   │   ├── counterfactual.py           # intervention contracts
+│   │   ├── meiotic_null.py              # alternative-meiosis summary
+│   │   ├── minimal_rescue.py            # bounded joint-rescue result
+│   │   ├── research_benchmark.py        # blind validation report
 │   │   ├── events.py                   # ordered event envelope
 │   │   └── errors.py                   # error envelope
 │   ├── domain/
@@ -140,7 +144,9 @@ apps/api/
 │   │   │   ├── phenotype.py
 │   │   │   ├── novelty.py
 │   │   │   ├── trace.py
-│   │   │   └── counterfactuals.py
+│   │   │   ├── counterfactuals.py
+│   │   │   ├── meiotic_null.py
+│   │   │   └── minimal_rescue.py
 │   │   ├── real_data/
 │   │   │   ├── vcf.py
 │   │   │   ├── pedigree.py
@@ -149,7 +155,8 @@ apps/api/
 │   │   └── evaluation/
 │   │       ├── planted_truth.py
 │   │       ├── metrics.py
-│   │       └── benchmarks.py
+│   │       ├── benchmarks.py
+│   │       └── research_benchmark.py
 │   ├── orchestration/
 │   │   ├── run_service.py              # application use cases
 │   │   ├── pipeline.py                 # stage transitions
@@ -212,6 +219,8 @@ POST /v1/runs/{run_id}/trace
 GET  /v1/runs/{run_id}/trace
 POST /v1/runs/{run_id}/counterfactuals
 GET  /v1/runs/{run_id}/counterfactuals
+POST /v1/runs/{run_id}/meiotic-null
+POST /v1/runs/{run_id}/minimal-rescue
 POST /v1/ingestion/preview
 ```
 

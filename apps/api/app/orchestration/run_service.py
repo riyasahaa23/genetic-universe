@@ -11,11 +11,15 @@ from app.repositories.interfaces import RunRepository
 from app.schemas.common import InterventionKind, RunStage, RunStatus
 from app.schemas.counterfactual import CounterfactualList, CounterfactualRequest, CounterfactualResult
 from app.schemas.events import TimelineResponse
+from app.schemas.meiotic_null import MeioticNullAnalysisResponse
+from app.schemas.minimal_rescue import MinimalRescueResponse
 from app.schemas.run import CreateRunRequest, RunCreateResponse, RunSnapshot
 from app.schemas.trace import TraceResponse
 from app.scientific.real_data.adapter import RealDataConfigurationError
 from app.scientific.real_data.ingestion import RealDataUnavailableError
 from app.scientific.synthetic.attribution import Candidate as RawCandidate
+from app.scientific.synthetic.meiotic_null import run_meiotic_null_distribution
+from app.scientific.synthetic.minimal_rescue import search_minimal_novelty_rescue
 from app.scientific.synthetic.runner import SyntheticExecution, build_snapshot, counterfactual_response, trace_response
 
 from .event_bus import EventBus
@@ -38,6 +42,8 @@ class RunService:
     event_bus: EventBus
     real_data_root: Path | None = None
     pipeline: ScientificPipeline | None = field(default=None, repr=False)
+    max_null_simulations: int = 5000
+    max_rescue_combination_count: int = 5000
 
     def __post_init__(self) -> None:
         if self.pipeline is None:
@@ -274,3 +280,115 @@ class RunService:
     def counterfactual_list(self, run_id: str) -> CounterfactualList:
         self.get(run_id)
         return CounterfactualList(run_id=run_id, results=self.repository.counterfactuals(run_id))
+
+    def meiotic_null(
+        self,
+        run_id: str,
+        *,
+        seed: int | None = None,
+        simulation_count: int = 1000,
+        histogram_bin_count: int = 20,
+    ) -> MeioticNullAnalysisResponse:
+        """Run a bounded same-parent alternative-meiosis analysis.
+
+        The analysis is deliberately derived from the completed run state and
+        is deterministic for the selected seed. It is not folded into the
+        primary snapshot because it is a potentially large, optional
+        post-run calculation; the event timeline still records its execution
+        and summary metadata.
+        """
+
+        record = self.get(run_id)
+        if simulation_count > self.max_null_simulations:
+            raise ServiceError(
+                "ANALYSIS_LIMIT_EXCEEDED",
+                f"simulation_count cannot exceed {self.max_null_simulations}.",
+                422,
+            )
+        if seed is not None and seed < 0:
+            raise ServiceError("INVALID_ANALYSIS_REQUEST", "seed must be non-negative.", 422)
+        execution = self._execution_for_completed_record(record)
+        analysis_seed = record.request.seed if seed is None else seed
+        self.event_bus.publish(
+            record,
+            "meiotic_null_started",
+            RunStage.NOVELTY_DETECTION,
+            {"simulation_count": simulation_count, "seed": analysis_seed},
+        )
+        try:
+            result = run_meiotic_null_distribution(
+                parent_a=execution.parent_a,
+                parent_b=execution.parent_b,
+                observed_offspring=execution.offspring,
+                phenotype_engine=execution.phenotype_engine,
+                seed=analysis_seed,
+                simulation_count=simulation_count,
+                histogram_bin_count=histogram_bin_count,
+            )
+        except ValueError as exc:
+            raise ServiceError("INVALID_MEIOTIC_NULL_REQUEST", str(exc), 422) from exc
+        response = MeioticNullAnalysisResponse(run_id=run_id, **result.to_dict())
+        self.event_bus.publish(
+            record,
+            "meiotic_null_completed",
+            RunStage.NOVELTY_DETECTION,
+            {
+                "simulation_count": response.simulation_count,
+                "observed_percentile": response.observed_percentile,
+                "transgression_direction": response.transgression_direction,
+            },
+        )
+        return response
+
+    def minimal_rescue(
+        self,
+        run_id: str,
+        *,
+        top_k: int = 8,
+        max_set_size: int = 3,
+        max_returned_sets: int = 10,
+        max_combination_count: int = 500,
+    ) -> MinimalRescueResponse:
+        """Search bounded joint interventions for the smallest rescue set."""
+
+        record = self.get(run_id)
+        if max_combination_count > self.max_rescue_combination_count:
+            raise ServiceError(
+                "ANALYSIS_LIMIT_EXCEEDED",
+                f"max_combination_count cannot exceed {self.max_rescue_combination_count}.",
+                422,
+            )
+        execution = self._execution_for_completed_record(record)
+        self.event_bus.publish(
+            record,
+            "minimal_rescue_started",
+            RunStage.COUNTERFACTUAL,
+            {
+                "top_k": top_k,
+                "max_set_size": max_set_size,
+                "max_combination_count": max_combination_count,
+            },
+        )
+        try:
+            result = search_minimal_novelty_rescue(
+                tracer=execution.tracer,
+                ranked_results=execution.ranked_results,
+                top_k=top_k,
+                max_set_size=max_set_size,
+                max_returned_sets=max_returned_sets,
+                max_combination_count=max_combination_count,
+            )
+        except ValueError as exc:
+            raise ServiceError("INVALID_MINIMAL_RESCUE_REQUEST", str(exc), 422) from exc
+        response = MinimalRescueResponse(run_id=run_id, **result.to_dict())
+        self.event_bus.publish(
+            record,
+            "minimal_rescue_completed",
+            RunStage.COUNTERFACTUAL,
+            {
+                "search_status": response.search_status,
+                "evaluated_combination_count": response.evaluated_combination_count,
+                "minimal_cardinality": response.minimal_cardinality,
+            },
+        )
+        return response
