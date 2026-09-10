@@ -20,10 +20,13 @@ from app.domain.identifiers import intervention_id
 from app.domain.run import RunRecord
 from app.orchestration.run_service import RunService, ServiceError
 from app.schemas.common import InterventionKind, RunMode, RunStage
+from app.schemas.meiotic_null import MeioticNullAnalysisRequest
+from app.schemas.minimal_rescue import MinimalRescueRequest
 from app.schemas.run import CreateRunRequest, RunOptions
 from app.scientific.synthetic.attribution import CounterfactualResult as RawCounterfactualResult
 from app.scientific.synthetic.runner import SyntheticExecution, counterfactual_response
 
+from .analysis_schemas import LegacyMeioticNullResponse, LegacyMinimalRescueResponse
 from .experiment_schemas import (
     CounterfactualInterventionRequest,
     CounterfactualInterventionResponse,
@@ -165,6 +168,22 @@ class LegacyExperimentService:
             attribution_score=float(raw.attribution_score),
             score_components={key: float(value) for key, value in raw.score_components.items()},
             provenance_summary=raw.provenance_summary,
+            baseline_phenotype=(raw.baseline_phenotype if raw.interaction_contrast is not None else None),
+            phenotype_after_a=raw.phenotype_after_a,
+            phenotype_after_b=raw.phenotype_after_b,
+            phenotype_after_ab=raw.phenotype_after_ab,
+            delta_a=raw.delta_a,
+            delta_b=raw.delta_b,
+            delta_ab=raw.delta_ab,
+            interaction_contrast=raw.interaction_contrast,
+            epistatic_excess=raw.epistatic_excess,
+            interaction_edge_delta=raw.interaction_edge_delta,
+            novelty_removed_a=raw.novelty_removed_a,
+            novelty_removed_b=raw.novelty_removed_b,
+            novelty_removed_ab=raw.novelty_removed_ab,
+            parental_envelope=raw.parental_envelope,
+            synergy_direction=raw.synergy_direction,
+            provenance=raw.provenance,
         )
 
     def trace(self, experiment_id: str) -> NoveltyTraceResponse:
@@ -274,6 +293,45 @@ class LegacyExperimentService:
             nodes=list(graph.get("nodes", [])),
             links=list(graph.get("links", [])),
             top_candidate=graph.get("top_candidate"),
+        )
+
+    def meiotic_null(
+        self,
+        experiment_id: str,
+        request: MeioticNullAnalysisRequest,
+    ) -> LegacyMeioticNullResponse:
+        """Expose the archive URL while using the canonical run service."""
+
+        self.completed(experiment_id)
+        result = self.run_service.meiotic_null(
+            experiment_id,
+            seed=request.seed,
+            simulation_count=request.simulation_count,
+            histogram_bin_count=request.histogram_bin_count,
+        )
+        return LegacyMeioticNullResponse(
+            experiment_id=experiment_id,
+            **result.model_dump(exclude={"run_id"}),
+        )
+
+    def minimal_rescue(
+        self,
+        experiment_id: str,
+        request: MinimalRescueRequest,
+    ) -> LegacyMinimalRescueResponse:
+        """Expose the archive URL while using the canonical rescue search."""
+
+        self.completed(experiment_id)
+        result = self.run_service.minimal_rescue(
+            experiment_id,
+            top_k=request.top_k,
+            max_set_size=request.max_set_size,
+            max_returned_sets=request.max_returned_sets,
+            max_combination_count=request.max_combination_count,
+        )
+        return LegacyMinimalRescueResponse(
+            experiment_id=experiment_id,
+            **result.model_dump(exclude={"run_id"}),
         )
 
     def demo(self) -> ExperimentDemoResponse:
@@ -404,3 +462,21 @@ def get_evidence_graph(
     service: LegacyExperimentService = Depends(get_legacy_service),
 ) -> EvidenceGraphResponse:
     return service.evidence_graph(experiment_id)
+
+
+@router.post("/{experiment_id}/meiotic-null", response_model=LegacyMeioticNullResponse)
+def run_meiotic_null(
+    experiment_id: str,
+    request: MeioticNullAnalysisRequest | None = None,
+    service: LegacyExperimentService = Depends(get_legacy_service),
+) -> LegacyMeioticNullResponse:
+    return service.meiotic_null(experiment_id, request or MeioticNullAnalysisRequest())
+
+
+@router.post("/{experiment_id}/minimal-rescue", response_model=LegacyMinimalRescueResponse)
+def run_minimal_rescue(
+    experiment_id: str,
+    request: MinimalRescueRequest | None = None,
+    service: LegacyExperimentService = Depends(get_legacy_service),
+) -> LegacyMinimalRescueResponse:
+    return service.minimal_rescue(experiment_id, request or MinimalRescueRequest())

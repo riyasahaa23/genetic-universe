@@ -40,6 +40,7 @@ class SimpleDiGraph:
 
 from app.scientific.synthetic.novelty import detect_novelty  # noqa: E402
 from app.scientific.synthetic.phenotype import (  # noqa: E402
+    EpistaticPair,
     PhenotypeEngine,
 )
 from app.scientific.synthetic.recombination import (  # noqa: E402
@@ -49,6 +50,45 @@ from app.scientific.synthetic.recombination import (  # noqa: E402
     SegmentProvenance,
     infer_recombination_events,
 )
+
+INTERACTION_CONTRAST_TOLERANCE = 1e-6
+
+
+def calculate_interaction_contrast(delta_a: float, delta_b: float, delta_ab: float) -> float:
+    """Return the raw second-order counterfactual interaction contrast.
+
+    Deltas use the service convention ``baseline - counterfactual``.  The
+    contrast is reported separately from model-edge ablation because the two
+    interventions answer different questions.
+    """
+
+    return float(delta_ab - delta_a - delta_b)
+
+
+def calculate_epistatic_excess(delta_a: float, delta_b: float, delta_ab: float) -> float:
+    """Return the sign-reversed interaction contrast used for presentation."""
+
+    return -calculate_interaction_contrast(delta_a, delta_b, delta_ab)
+
+
+def classify_epistatic_excess(
+    excess: float, tolerance: float = INTERACTION_CONTRAST_TOLERANCE
+) -> str:
+    """Classify pairwise non-additivity with a numerical tolerance."""
+
+    if excess > tolerance:
+        return "positive_synergy"
+    if excess < -tolerance:
+        return "antagonistic_nonpositive_synergy"
+    return "approximately_additive"
+
+
+def classify_interaction_contrast(
+    contrast: float, tolerance: float = INTERACTION_CONTRAST_TOLERANCE
+) -> str:
+    """Compatibility wrapper that classifies from the presentation sign."""
+
+    return classify_epistatic_excess(-contrast, tolerance=tolerance)
 
 
 @dataclass
@@ -114,8 +154,32 @@ class CounterfactualResult:
     complexity_penalty: float = 0.0
     semantics: Dict[str, Any] = field(default_factory=dict)
 
+    # Formal pairwise fields are populated only for interaction candidates.
+    # They remain separate from ``interaction_edge_delta`` (edge ablation).
+    phenotype_after_a: Optional[float] = None
+    phenotype_after_b: Optional[float] = None
+    phenotype_after_ab: Optional[float] = None
+    delta_a: Optional[float] = None
+    delta_b: Optional[float] = None
+    delta_ab: Optional[float] = None
+    interaction_contrast: Optional[float] = None
+    epistatic_excess: Optional[float] = None
+    interaction_edge_delta: Optional[float] = None
+    novelty_removed_a: Optional[bool] = None
+    novelty_removed_b: Optional[bool] = None
+    novelty_removed_ab: Optional[bool] = None
+    parental_envelope: Optional[Dict[str, float]] = None
+    synergy_direction: Optional[str] = None
+    provenance: Optional[Dict[str, Any]] = None
+
+    @property
+    def baseline_phenotype(self) -> float:
+        """Explicit scientific alias for the legacy baseline field."""
+
+        return self.original_phenotype
+
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        result = {
             **self.semantics,
             "candidate_id": self.candidate_id,
             "candidate_name": self.candidate_name,
@@ -135,6 +199,35 @@ class CounterfactualResult:
             "interaction_evidence": round(self.interaction_evidence, 4),
             "complexity_penalty": round(self.complexity_penalty, 4),
         }
+
+        if self.interaction_edge_delta is not None:
+            result["interaction_edge_delta"] = round(self.interaction_edge_delta, 4)
+
+        if self.interaction_contrast is not None:
+            result.update(
+                {
+                    "baseline_phenotype": round(self.baseline_phenotype, 4),
+                    "phenotype_after_a": round(self.phenotype_after_a or 0.0, 4),
+                    "phenotype_after_b": round(self.phenotype_after_b or 0.0, 4),
+                    "phenotype_after_ab": round(self.phenotype_after_ab or 0.0, 4),
+                    "delta_a": round(self.delta_a or 0.0, 4),
+                    "delta_b": round(self.delta_b or 0.0, 4),
+                    "delta_ab": round(self.delta_ab or 0.0, 4),
+                    "interaction_contrast": round(self.interaction_contrast, 4),
+                    "epistatic_excess": round(self.epistatic_excess or 0.0, 4),
+                    "novelty_removed_a": self.novelty_removed_a,
+                    "novelty_removed_b": self.novelty_removed_b,
+                    "novelty_removed_ab": self.novelty_removed_ab,
+                    "parental_envelope": {
+                        key: round(value, 4)
+                        for key, value in (self.parental_envelope or {}).items()
+                    },
+                    "synergy_direction": self.synergy_direction,
+                    "provenance": self.provenance,
+                }
+            )
+
+        return result
 
 
 def compute_search_space_accounting(locus_count: int = 50, segment_count: int = 4) -> Dict[str, Any]:
@@ -231,6 +324,290 @@ class NoveltyTracer:
         )
         self.y_O = self.y_O_breakdown.total
         self.baseline_novelty = detect_novelty(self.y_A, self.y_B, self.y_O)
+
+    def _segment_for_locus(self, gamete: Any, locus_idx: int) -> Optional[SegmentProvenance]:
+        """Return the transmitted segment containing a zero-based locus."""
+
+        return next(
+            (segment for segment in gamete.segments if segment.start <= locus_idx < segment.end),
+            None,
+        )
+
+    def _transmission_provenance(self, locus_idx: int, side: str) -> Dict[str, Any]:
+        """Serialize observable ancestry for one transmitted allele copy."""
+
+        locus_prov = self.offspring.loci_provenance[locus_idx]
+        if side == "A":
+            gamete = self.offspring.maternal_gamete
+            allele = locus_prov.allele_a
+            source_parent = locus_prov.source_parent_a
+            source_homolog = locus_prov.source_homolog_a
+            crossover_interval = locus_prov.crossover_interval_a
+        else:
+            gamete = self.offspring.paternal_gamete
+            allele = locus_prov.allele_b
+            source_parent = locus_prov.source_parent_b
+            source_homolog = locus_prov.source_homolog_b
+            crossover_interval = locus_prov.crossover_interval_b
+
+        segment = self._segment_for_locus(gamete, locus_idx)
+        return {
+            "locus_id": locus_prov.locus_id,
+            "position": locus_prov.position,
+            "parent": source_parent,
+            "homolog": source_homolog,
+            "allele": allele,
+            "crossover_interval": crossover_interval,
+            "inferred_crossover_association": crossover_interval,
+            "inherited_segment": segment.to_dict() if segment is not None else None,
+        }
+
+    @staticmethod
+    def _parent_has_cis_pair(parent: ParentGenome, idx_a: int, idx_b: int) -> bool:
+        """Check whether both loci occur on one observed parental homolog."""
+
+        return any(
+            homolog[idx_a] == 1 and homolog[idx_b] == 1
+            for homolog in (parent.homolog_1, parent.homolog_2)
+        )
+
+    def _pair_provenance(self, pair: EpistaticPair) -> Dict[str, Any]:
+        """Build ancestry evidence for both loci without evaluator truth."""
+
+        idx_a = pair.locus_a_pos - 1
+        idx_b = pair.locus_b_pos - 1
+        locus_count = len(self.offspring.loci_provenance)
+        if not (0 <= idx_a < locus_count and 0 <= idx_b < locus_count):
+            return {
+                "locus_a": pair.locus_a,
+                "locus_b": pair.locus_b,
+                "locus_a_position": pair.locus_a_pos,
+                "locus_b_position": pair.locus_b_pos,
+                "active_haplotypes": [],
+                "recombinant_assembly": False,
+                "cis_in_parent_a": False,
+                "cis_in_parent_b": False,
+                "existed_in_cis_in_either_parent": False,
+            }
+
+        active_haplotypes: List[Dict[str, Any]] = []
+        for side, gamete in (
+            ("A", self.offspring.maternal_gamete),
+            ("B", self.offspring.paternal_gamete),
+        ):
+            if gamete.alleles[idx_a] == 1 and gamete.alleles[idx_b] == 1:
+                locus_a_tx = self._transmission_provenance(idx_a, side)
+                locus_b_tx = self._transmission_provenance(idx_b, side)
+                active_haplotypes.append(
+                    {
+                        "parent": side,
+                        "locus_a": locus_a_tx,
+                        "locus_b": locus_b_tx,
+                        "recombinant_assembly": locus_a_tx["homolog"] != locus_b_tx["homolog"],
+                        "inferred_crossover_association": [
+                            locus_a_tx["crossover_interval"],
+                            locus_b_tx["crossover_interval"],
+                        ],
+                    }
+                )
+
+        cis_in_parent_a = self._parent_has_cis_pair(self.parent_a, idx_a, idx_b)
+        cis_in_parent_b = self._parent_has_cis_pair(self.parent_b, idx_a, idx_b)
+        return {
+            "locus_a": pair.locus_a,
+            "locus_b": pair.locus_b,
+            "locus_a_position": pair.locus_a_pos,
+            "locus_b_position": pair.locus_b_pos,
+            "locus_a_transmissions": {
+                "A": self._transmission_provenance(idx_a, "A"),
+                "B": self._transmission_provenance(idx_a, "B"),
+            },
+            "locus_b_transmissions": {
+                "A": self._transmission_provenance(idx_b, "A"),
+                "B": self._transmission_provenance(idx_b, "B"),
+            },
+            "active_haplotypes": active_haplotypes,
+            "recombinant_assembly": any(item["recombinant_assembly"] for item in active_haplotypes),
+            "cis_in_parent_a": cis_in_parent_a,
+            "cis_in_parent_b": cis_in_parent_b,
+            "existed_in_cis_in_either_parent": cis_in_parent_a or cis_in_parent_b,
+        }
+
+    def _resolve_interaction_pair(self, candidate: Candidate) -> Optional[EpistaticPair]:
+        """Resolve an interaction from model or observable candidate metadata."""
+
+        for pair in self.phenotype_engine.config.epistasis:
+            if pair.id == candidate.id:
+                return pair
+
+        details = candidate.details or {}
+        locus_a = details.get("locus_a")
+        locus_b = details.get("locus_b")
+
+        def parse_position(value: Any) -> Optional[int]:
+            if value is None:
+                return None
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                try:
+                    return int(str(value).upper().replace("L", ""))
+                except ValueError:
+                    return None
+
+        pos_a = parse_position(details.get("locus_a_pos", locus_a))
+        pos_b = parse_position(details.get("locus_b_pos", locus_b))
+        if pos_a is None or pos_b is None:
+            return None
+        return EpistaticPair(
+            id=candidate.id,
+            locus_a=str(locus_a or f"L{pos_a:02d}"),
+            locus_b=str(locus_b or f"L{pos_b:02d}"),
+            locus_a_pos=pos_a,
+            locus_b_pos=pos_b,
+            coefficient=float(details.get("coefficient", 0.0)),
+            description="Resolved from observable candidate metadata",
+        )
+
+    def _novelty_removed_by(self, phenotype: float) -> bool:
+        """Return whether a transgressive baseline is brought into the envelope.
+
+        A counterfactual for an already non-transgressive offspring is not
+        credited as a "rescue". The result must also be inside the complete
+        parental envelope; crossing from one tail to the other remains
+        transgressive and is therefore not a successful rescue.
+        """
+
+        if not self.baseline_novelty.is_transgressive:
+            return False
+        return not detect_novelty(self.y_A, self.y_B, phenotype).is_transgressive
+
+    def _calculate_pairwise_interaction(self, pair: EpistaticPair) -> Dict[str, Any]:
+        """Evaluate A-only, B-only, and joint allele reversion on one state."""
+
+        idx_a = pair.locus_a_pos - 1
+        idx_b = pair.locus_b_pos - 1
+        locus_count = len(self.offspring.loci_provenance)
+        if not (0 <= idx_a < locus_count and 0 <= idx_b < locus_count):
+            raise ValueError("Pairwise interaction loci must be present in the offspring genome.")
+        if idx_a == idx_b:
+            raise ValueError("Pairwise interaction loci must be distinct.")
+
+        base_a = list(self.offspring.maternal_gamete.alleles)
+        base_b = list(self.offspring.paternal_gamete.alleles)
+        phenotype_after_a = self.phenotype_engine.evaluate_diploid(
+            list(base_a), list(base_b), overridden_alleles={idx_a: 0}
+        ).total
+        phenotype_after_b = self.phenotype_engine.evaluate_diploid(
+            list(base_a), list(base_b), overridden_alleles={idx_b: 0}
+        ).total
+        phenotype_after_ab = self.phenotype_engine.evaluate_diploid(
+            list(base_a), list(base_b), overridden_alleles={idx_a: 0, idx_b: 0}
+        ).total
+
+        delta_a = self.y_O - phenotype_after_a
+        delta_b = self.y_O - phenotype_after_b
+        delta_ab = self.y_O - phenotype_after_ab
+        interaction_contrast = calculate_interaction_contrast(delta_a, delta_b, delta_ab)
+        epistatic_excess = calculate_epistatic_excess(delta_a, delta_b, delta_ab)
+        return {
+            "phenotype_after_a": phenotype_after_a,
+            "phenotype_after_b": phenotype_after_b,
+            "phenotype_after_ab": phenotype_after_ab,
+            "delta_a": delta_a,
+            "delta_b": delta_b,
+            "delta_ab": delta_ab,
+            "interaction_contrast": interaction_contrast,
+            "epistatic_excess": epistatic_excess,
+            "novelty_removed_a": self._novelty_removed_by(phenotype_after_a),
+            "novelty_removed_b": self._novelty_removed_by(phenotype_after_b),
+            "novelty_removed_ab": self._novelty_removed_by(phenotype_after_ab),
+            "parental_envelope": {
+                "min": min(self.y_A, self.y_B),
+                "max": max(self.y_A, self.y_B),
+            },
+            "synergy_direction": classify_epistatic_excess(epistatic_excess),
+            "provenance": self._pair_provenance(pair),
+        }
+
+    def analyze_pairwise_interaction(self, candidate: Candidate) -> Dict[str, Any]:
+        """Return formal model-relative non-additivity evidence for one pair."""
+
+        if candidate.candidate_type != "INTERACTION":
+            raise ValueError("Pairwise interaction analysis requires an INTERACTION candidate.")
+        pair = self._resolve_interaction_pair(candidate)
+        if pair is None:
+            raise ValueError("Interaction candidate does not identify two loci.")
+        return {"baseline_phenotype": self.y_O, **self._calculate_pairwise_interaction(pair)}
+
+    def _apply_candidate_intervention(
+        self,
+        candidate: Candidate,
+        g_a: List[int],
+        g_b: List[int],
+        broken_pairs: Set[Tuple[int, int]],
+        overridden_alleles: Dict[int, int],
+    ) -> str:
+        """Apply one candidate to copied state using production semantics."""
+
+        if candidate.candidate_type == "INTERACTION":
+            pair = self._resolve_interaction_pair(candidate)
+            if pair is None:
+                raise ValueError("Interaction requires explicit coordinates")
+            broken_pairs.add((pair.locus_a_pos - 1, pair.locus_b_pos - 1))
+            return "break_interaction"
+
+        if candidate.candidate_type == "SEGMENT":
+            parent = str(candidate.details.get("parent", "A")).upper()
+            start = int(candidate.details.get("start", 0))
+            end = int(candidate.details.get("end", len(g_a)))
+            if start < 0 or end <= start or end > len(g_a):
+                raise ValueError("Segment intervention has invalid bounds")
+            source_homolog = str(candidate.details.get("source_homolog", f"{parent}1"))
+            if parent == "A":
+                other = self.parent_a.homolog_2 if source_homolog == "A1" else self.parent_a.homolog_1
+                target = g_a
+            elif parent == "B":
+                other = self.parent_b.homolog_2 if source_homolog == "B1" else self.parent_b.homolog_1
+                target = g_b
+            else:
+                raise ValueError("Segment intervention has an invalid parent")
+            if str(candidate.details.get("operation", "")).upper() == "REMOVE_SEGMENT":
+                target[start:end] = [0] * (end - start)
+                return "remove_segment"
+            target[start:end] = other[start:end]
+            return "swap_segment"
+
+        if candidate.candidate_type == "VARIANT":
+            locus_id = str(candidate.details.get("locus_id", "L01"))
+            try:
+                idx = int(locus_id.upper().replace("L", "")) - 1
+            except ValueError as exc:
+                raise ValueError("Variant intervention has an invalid locus") from exc
+            if not 0 <= idx < len(g_a):
+                raise ValueError("Variant intervention locus is outside the genome")
+            overridden_alleles[idx] = int(candidate.details.get("altered_dosage", 0))
+            return str(candidate.details.get("counterfactual_policy", "revert_variant"))
+
+        raise ValueError(f"Unsupported candidate type: {candidate.candidate_type}")
+
+    def run_joint_counterfactual(self, candidates: List[Candidate]):
+        """Apply a bounded set jointly and evaluate the phenotype once."""
+
+        if not candidates:
+            raise ValueError("At least one candidate is required for a joint counterfactual.")
+        g_a = list(self.offspring.maternal_gamete.alleles)
+        g_b = list(self.offspring.paternal_gamete.alleles)
+        broken_pairs: Set[Tuple[int, int]] = set()
+        overridden_alleles: Dict[int, int] = {}
+        for candidate in candidates:
+            self._apply_candidate_intervention(candidate, g_a, g_b, broken_pairs, overridden_alleles)
+        return self.phenotype_engine.evaluate_diploid(
+            g_a,
+            g_b,
+            broken_pairs=broken_pairs,
+            overridden_alleles=overridden_alleles,
+        )
 
     def generate_candidates(self, max_interaction_candidates: int = 150) -> List[Candidate]:
         """
@@ -568,6 +945,8 @@ class NoveltyTracer:
         overridden_alleles: Dict[int, int] = {}
         intervention_name = ""
         interaction_evidence = 0.0
+        interaction_edge_delta: Optional[float] = None
+        pairwise_analysis: Dict[str, Any] = {}
 
         if candidate.candidate_type == "INTERACTION":
             intervention_name = "break_interaction"
@@ -589,6 +968,10 @@ class NoveltyTracer:
 
             # Interaction evidence corresponds directly to the isolated non-linear epistatic delta
             interaction_evidence = delta_ab
+            interaction_edge_delta = self.y_O - cf_phenotype
+            pair = self._resolve_interaction_pair(candidate)
+            if pair is not None:
+                pairwise_analysis = self._calculate_pairwise_interaction(pair)
 
         elif candidate.candidate_type == "SEGMENT":
             intervention_name = "swap_segment"
@@ -634,7 +1017,7 @@ class NoveltyTracer:
         cf_novelty = detect_novelty(self.y_A, self.y_B, cf_phenotype)
         # Crossing the entire parental interval into opposite-tail novelty is
         # not removal of phenotypic novelty.
-        novelty_removed = self.baseline_novelty.is_transgressive and not cf_novelty.is_transgressive
+        novelty_removed = self._novelty_removed_by(cf_phenotype)
 
         # Structural heuristic only: not an empirical resampling stability estimate.
         if candidate.candidate_type == "INTERACTION":
@@ -707,6 +1090,8 @@ class NoveltyTracer:
             provenance_summary=provenance_summary,
             interaction_evidence=interaction_evidence,
             complexity_penalty=complexity_penalty,
+            interaction_edge_delta=interaction_edge_delta,
+            **pairwise_analysis,
             semantics={
                 "label": "MODEL-RELATIVE COMPUTATIONAL COUNTERFACTUAL",
                 "counterfactual_type": intervention_name,

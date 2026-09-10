@@ -152,6 +152,23 @@ class CounterfactualInterventionResponse(LegacyModel):
     attribution_score: float
     score_components: dict[str, float]
     provenance_summary: str
+    # Formal single-vs-joint fields for pairwise interaction candidates.
+    baseline_phenotype: float | None = None
+    phenotype_after_a: float | None = None
+    phenotype_after_b: float | None = None
+    phenotype_after_ab: float | None = None
+    delta_a: float | None = None
+    delta_b: float | None = None
+    delta_ab: float | None = None
+    interaction_contrast: float | None = None
+    epistatic_excess: float | None = None
+    interaction_edge_delta: float | None = None
+    novelty_removed_a: bool | None = None
+    novelty_removed_b: bool | None = None
+    novelty_removed_ab: bool | None = None
+    parental_envelope: dict[str, float] | None = None
+    synergy_direction: str | None = None
+    provenance: dict[str, Any] | None = None
 
 
 class NoveltyTraceResponse(LegacyModel):

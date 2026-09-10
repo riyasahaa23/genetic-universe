@@ -99,6 +99,8 @@ def create_app(
         repository,
         application.state.event_bus,
         real_data_root=active_settings.data_root,
+        max_null_simulations=active_settings.max_null_simulations,
+        max_rescue_combination_count=active_settings.max_rescue_combination_count,
     )
 
     @application.middleware("http")

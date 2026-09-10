@@ -42,9 +42,30 @@ curl -X POST http://localhost:8000/v1/runs/<run_id>/start
 curl http://localhost:8000/v1/runs/<run_id>/snapshot
 curl http://localhost:8000/v1/runs/<run_id>/timeline
 curl http://localhost:8000/v1/runs/<run_id>/trace
+
+# Optional bounded post-run analyses
+curl -X POST http://localhost:8000/v1/runs/<run_id>/meiotic-null \
+  -H 'content-type: application/json' \
+  -d '{"simulation_count":1000,"histogram_bin_count":20}'
+curl -X POST http://localhost:8000/v1/runs/<run_id>/minimal-rescue \
+  -H 'content-type: application/json' \
+  -d '{"top_k":8,"max_set_size":3}'
 ```
 
 The default fixture is deterministic. It plants an interpretable interaction and exposes model-relative counterfactual deltas.
+
+The optional analyses are model-relative research summaries: the null endpoint
+simulates alternative same-parent meioses, the rescue endpoint searches bounded
+joint candidate sets, and neither should be interpreted as biological or
+clinical evidence. Their HTTP limits are controlled by `GENETIC_` settings.
+
+The multi-seed blind validation benchmark is also available through the CLI:
+
+```bash
+python -m app.scientific.run_research_benchmark \
+  --difficulty easy --seeds 50 --bootstrap-replicates 1000 \
+  --output research_benchmark.json
+```
 
 ## HTTP client boundary
 

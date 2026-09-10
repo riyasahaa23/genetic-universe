@@ -13,12 +13,13 @@ complete.
 | Entry point | Two competing FastAPI/application paths under `app/validation` and `app/trio` | One supported `app.main:app`; old HTTP/WebSocket behavior is served by canonical compatibility adapters, while old copies remain migration references. |
 | API shape | Legacy route families and mixed response/error shapes | Versioned `/v1` routes with strict Pydantic request/response schemas and one error envelope. |
 | Scientific ownership | Scientific code was reachable from transport/application modules | `app/scientific` is called through `ScientificPipeline` and the typed `runner.py` adapter. |
-| Synthetic path | Useful engine but hard to consume consistently | Seeded synthetic run returns genome, provenance, phenotype ledger, novelty, candidates, graph and counterfactuals. |
+| Synthetic path | Useful engine but hard to consume consistently | Seeded synthetic run returns genome, provenance, phenotype ledger, novelty, candidates, graph and counterfactuals; pairwise interaction evidence is retained in canonical and legacy contracts. |
+| New archive analyses | Separate null, rescue and research modules | Transplanted into canonical scientific namespaces, exposed through bounded `/v1` and legacy adapters, with CLI compatibility retained. |
 | Events | Legacy WebSocket publisher behavior | Ordered event envelopes with stable sequence, replay timeline, terminal events and reconnect cursor. |
 | Persistence | Legacy database path and in-memory manager were coupled to old services | Repository protocol with memory and SQLAlchemy adapters; versioned migration; SQLite tested and PostgreSQL configured. |
 | Real data | Existing family pipeline required data files and exposed old API behavior | Prepared indexed-region CLI, checksums, pedigree validation, real-trio/synthetic-phenotype adapter and disclosure. |
 | Error/security | Raw exception text could reach clients; broad CORS in old app | Stable public codes, request IDs, sanitized messages, explicit CORS, safe paths, bounds and non-root container. |
-| Verification | Full extracted test set depended on unavailable GIAB/public artifacts and old imports | 26 canonical tests, including 4 compatibility tests, pass; data-dependent legacy tests remain separately labelled and are not silently counted. |
+| Verification | Full extracted test set depended on unavailable GIAB/public artifacts and old imports | 41 canonical tests, including new pairwise and post-run analysis coverage, pass; data-dependent legacy tests remain separately labelled and are not silently counted. |
 | Reproducibility | Configuration and code provenance were distributed across old modules | Seed, model/dataset IDs, code revision, runtime/disclosure and source checksums are carried in result contracts. |
 
 ## Backend plan comparison
@@ -55,8 +56,9 @@ complete.
 - All planned REST routes are present under `/v1`; `/health` remains unversioned.
 - All extracted HTTP surfaces are also available through `app/api/compat/`:
   stage-oriented experiments, real-trio analysis, benchmark/evaluation routes,
-  and the old `/ws/experiments/{id}` event protocol. They delegate to the
-  canonical services instead of mounting a second FastAPI application.
+  same-parent null analysis, bounded minimal rescue, and the old
+  `/ws/experiments/{id}` event protocol. They delegate to the canonical
+  services instead of mounting a second FastAPI application.
 - WebSocket replay is present at `/v1/runs/{run_id}/events` and accepts
   `after_sequence`.
 - Errors are normalized for HTTP; invalid WebSocket cursors are rejected with a
@@ -90,11 +92,11 @@ complete.
 ### Testing and benchmarks
 
 - Complete for canonical contract, HTTP, WebSocket, SQL restart, failure-mode,
-  real fixture, artifact safety, core-property, and legacy compatibility tests.
-- The old benchmark endpoint family is implemented through a typed canonical
-  benchmark suite. Partial remains only for the release artifact: a committed
-  multi-seed report with null controls, confidence intervals and a 1,000-locus
-  baseline is still required.
+  real fixture, artifact safety, core-property, pairwise-analysis, post-run
+  analysis, and legacy compatibility tests. The blind multi-seed benchmark is
+  executable and API/CLI exposed; partial remains only for the release
+  artifact: a committed multi-seed report with null controls, confidence
+  intervals and a 1,000-locus baseline is still required.
 
 ## Common plan comparison
 
@@ -116,34 +118,40 @@ complete.
 
 ## Current strict scorecard
 
-1. Code Quality: 8.2/10 — canonical boundaries, repository protocol, strict
-   public models and linting are strong; migrated scientific code remains dense.
-2. Code Readability: 8.1/10 — names, schemas, README, migration and audits are
-   clear; `RunService.start` still deserves stage-level extraction.
-3. Implementation Quality: 8.4/10 — the complete synthetic story, three
-   interventions, real prepared mode and persistence are functional.
-4. Architecture & Design: 8.5/10 — modular monolith, pipeline seam and
-   OpenAPI-first design fit the hackathon; distributed execution is deferred.
-5. Performance & Optimization: 7.5/10 — bounded inputs and indexed extraction
-   are enforced; no clean-machine load profile or async worker exists.
-6. Security: 7.8/10 — strict validation, CORS, path/checksum controls, safe
-   errors, limits and non-root Docker are present; no auth/rate limiting by
-   explicit MVP scope.
-7. Testing Quality: 8.4/10 — 26 canonical tests, including 4 compatibility
-   tests, pass across contracts, API, WebSocket, persistence, failures, real
-   mode and properties; the supplied external data and container tests remain
+1. Code Quality: 8.0/10 — canonical boundaries, repository protocol, strict
+   public models and linting are strong; the large migrated evaluator and dense
+   scientific engine remain technical-debt hotspots.
+2. Code Readability: 8.0/10 — names, schemas, README and migration notes are
+   clear; `RunService.start` and the research evaluator deserve decomposition.
+3. Implementation Quality: 8.5/10 — the synthetic story, three interventions,
+   pairwise formal evidence, null analysis, bounded rescue, blind benchmark,
+   real prepared mode and persistence are functional.
+4. Architecture & Design: 8.3/10 — modular monolith, pipeline seam,
+   repository boundary and OpenAPI-first design fit the MVP; post-run analyses
+   are recomputable rather than first-class persisted artifacts.
+5. Performance & Optimization: 7.1/10 — requests are bounded and deterministic;
+   research/rescue calculations are synchronous and there is no worker,
+   cancellation or load profile.
+6. Security: 7.6/10 — strict validation, CORS, path/checksum controls, safe
+   errors, resource limits and non-root Docker are present; auth, rate limiting
+   and request-level workload isolation are absent.
+7. Testing Quality: 8.3/10 — 41 canonical tests pass across contracts, API,
+   WebSocket, persistence, failures, real mode, properties, pairwise science
+   and the new analysis endpoints; external data and container tests remain
    environment-dependent.
-8. Documentation: 8.6/10 — implementation plan, migration inventory, README,
-   phase audits and scientific wording are unusually complete for an MVP.
-9. Scalability: 7.2/10 — bounded artifacts and durable metadata are sound;
-   synchronous execution, polling and JSON snapshots limit larger workloads.
-10. DevOps Practices: 7.4/10 — CI, pinned dependencies, migrations, Docker and
-    Compose are present; Docker/PostgreSQL were not executable in this workspace.
-11. User Experience: 7.8/10 — the contract supports the intended animated
-    frontend and stable failure/reconnect states; actual live UI integration is
-    pending.
+8. Documentation: 8.7/10 — implementation plan, migration inventory, README,
+   OpenAPI, audits and scientific wording are unusually complete for an MVP.
+9. Scalability: 7.0/10 — bounded artifacts and durable metadata are sound;
+   synchronous execution, polling, JSON snapshots and combinatorial searches
+   limit larger workloads.
+10. DevOps Practices: 7.4/10 — CI, pinned dependencies, migrations, Docker,
+    Compose and contract freshness checks are present; Docker/PostgreSQL were
+    not executable in this workspace.
+11. User Experience: 7.5/10 — the backend provides stable snapshots, events,
+    disclosures and errors, but the live generated frontend client and UI
+    integration remain unfinished.
 
-Overall: 8.0/10
+Overall: 7.9/10
 Maturity: MVP backend / advanced research prototype; not production-ready
 
 ## Top strengths

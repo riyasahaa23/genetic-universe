@@ -23,6 +23,13 @@ directory or the legacy application entrypoints.
 | `app/validation/db/*` | `app/repositories/*` | replaced | Repository contract is shared by memory and durable adapters. |
 | `app/validation/main.py` | `app/main.py` and `app/api/compat/*` | compatibility wrapper | Importing the old module returns the canonical application; it does not create a second app or database singleton. |
 | `app/trio/api.py` | `app/scientific/real_data/*`, `app/api/compat/real_trio.py`, `app/api/compat/benchmarks.py` | migrated/compatibility-adapted | Real-trio and benchmark routes preserve their old `/api` paths while using canonical dependencies and services. |
+| Archive `app/scientific/meiotic_null.py` | `app/scientific/synthetic/meiotic_null.py` | transplanted/adapted | Same-parent alternative-meiosis null summaries are transport-free and bounded by the canonical service. |
+| Archive `app/scientific/minimal_rescue.py` | `app/scientific/synthetic/minimal_rescue.py` | transplanted/adapted | Cardinality-first joint rescue search uses observable candidate coordinates and canonical phenotype interventions. |
+| Archive `app/scientific/research_benchmark.py` | `app/scientific/evaluation/research_benchmark.py` | transplanted/refactored | Blind multi-seed evaluation remains separate from production ranking; evaluator truth is not exposed to candidate generation. |
+| Archive `app/scientific/run_research_benchmark.py` | `app/scientific/run_research_benchmark.py` | compatibility wrapper/CLI | Existing offline benchmark commands retain their import path while using the canonical evaluation package. |
+| Archive top-level null/rescue imports | `app/scientific/{meiotic_null,minimal_rescue}.py` | compatibility wrappers | Existing notebooks can import the new analyses without bypassing the canonical `app.scientific.synthetic` implementations. |
+| Archive pairwise attribution fields | `app/scientific/synthetic/attribution.py` | merged selectively | Formal interaction contrast, epistatic excess, joint interventions and provenance were added without replacing the newer observable-only candidate mining. |
+| Archive analysis schemas/routes | `app/schemas/{meiotic_null,minimal_rescue,research_benchmark}.py`, `app/api/v1/analyses.py`, `app/api/compat/*` | merged/adapted | Canonical `/v1` endpoints and legacy `/api` aliases share `RunService`; expensive requests are bounded by settings. |
 
 The copied `app/datasets/` package remains a migration reference for old
 dataset helpers. It is not imported by the supported `app.main:app` runtime.
@@ -47,6 +54,10 @@ dataset helpers. It is not imported by the supported `app.main:app` runtime.
 - The old experiment WebSocket protocol (`/ws/experiments/{id}`) is translated
   from the canonical replayable event bus and retains its `connected`/`pong`
   messages.
+- Same-parent null analysis, minimal rescue search and the blind research
+  benchmark are optional post-run analyses. They are deterministic/reproducible
+  but are recomputed from the completed run rather than stored as unbounded
+  primary snapshots; start/completion events are appended to the timeline.
 
 ## Removal gate
 

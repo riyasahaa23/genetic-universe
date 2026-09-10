@@ -10,7 +10,7 @@ from .compat import benchmarks as benchmark_compat
 from .compat import events as legacy_events
 from .compat import experiments as experiment_compat
 from .compat import real_trio as real_trio_compat
-from .v1 import counterfactuals, datasets, events, health, ingestion, runs, trace
+from .v1 import analyses, counterfactuals, datasets, events, health, ingestion, runs, trace
 
 
 def build_router() -> APIRouter:
@@ -22,6 +22,7 @@ def build_router() -> APIRouter:
     router.include_router(health.router, responses=public_errors)
     router.include_router(datasets.router, responses=public_errors)
     router.include_router(runs.router, responses=public_errors)
+    router.include_router(analyses.router, responses=public_errors)
     router.include_router(counterfactuals.router, responses=public_errors)
     router.include_router(ingestion.router, responses=public_errors)
     router.include_router(trace.router, responses=public_errors)

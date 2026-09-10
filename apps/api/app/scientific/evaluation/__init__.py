@@ -23,6 +23,7 @@ from .benchmarks import (
     run_variable_target_benchmark,
 )
 from .metrics import evaluate_tracer, score_order
+from .research_benchmark import run_research_benchmark, run_research_benchmark_suite
 
 __all__ = [
     "execute_baseline_comparison",
@@ -45,4 +46,6 @@ __all__ = [
     "run_scalability_benchmark",
     "run_variable_target_benchmark",
     "score_order",
+    "run_research_benchmark",
+    "run_research_benchmark_suite",
 ]
