@@ -1,30 +1,35 @@
 {
-  "name": "web",
-  "version": "0.1.0",
-  "type": "module",
+  "name": "genetic-universe-frontend",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint --max-warnings 0",
-    "check-types": "next typegen && tsc --noEmit"
+    "start": "next start -p 3000",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@genetic/ui": "workspace:*",
-    "next": "16.3.4",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "@react-three/drei": "^9.105.6",
+    "@react-three/fiber": "^8.16.6",
+    "@types/d3": "^7.4.3",
+    "@types/three": "^0.164.1",
+    "clsx": "^2.1.1",
+    "d3": "^7.9.0",
+    "lucide-react": "^0.378.0",
+    "next": "14.2.3",
+    "puppeteer": "^25.10.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.3.0",
+    "three": "^0.164.1"
   },
   "devDependencies": {
-    "@genetic/eslint-config": "workspace:*",
-    "@genetic/typescript-config": "workspace:*",
-    "@tailwindcss/postcss": "4.3.3",
-    "@types/node": "26.4.1",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.5",
-    "eslint": "10.9.1",
-    "tailwindcss": "4.3.3",
-    "typescript": "7.0.2"
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
   }
 }
